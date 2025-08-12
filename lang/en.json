@@ -1,0 +1,62 @@
+{
+	"enhancedcombathud-t2k4e" : {
+		"Titles" : {
+			"ActionPanel"				: "Spotlight Actions",
+			"Attributes"				: "Attributes",
+			"ROLL"						: "ROLL",
+			"Properties"				: "Properties",
+			"Equipment"						: "Equipment",
+			"Persuade"					: "Persuade",
+			"Grapple"					: "Grapple",
+			"BreakFree"					: "Break free",
+			"ClearJam"					: "Clear Jam",
+			"Aim"						: "Aim",
+			"FirstAid"					: "First aid",
+			"Rally"						: "Rally",
+			"EnterExit"					: "Enter/exit vehicle",
+			"Cover"						: "Seek cover",
+			"FulltoPartial"				: "full to partial cover",
+			"Run"						: "Run",
+			"CrossBarier"				: "Crosss barrier",
+			"GetUp"						: "Get up",
+			"Shove"						: "Shove",
+			"Disarm"					: "Disarm",
+			"GrappleAttack"				: "Grapple attack",
+			"Retreat"					: "Retreat",
+			"Reload"					: "Reload",
+			"Drop"						: "Drop to ground",
+			"PartialtoFull"				: "Partial to full cover"
+		},
+		
+		"Descriptions" : {
+			"Flee"						: "See Twilight:2000 core rules book p.??",
+			"Persuade"					: "See Twilight:2000 core rules book p.??",
+			"Grapple"					: "See Twilight:2000 core rules book p.??",
+			"BreakFree"					: "See Twilight:2000 core rules book p.??",
+			"ClearJam"					: "See Twilight:2000 core rules book p.??",
+			"Aim"						: "See Twilight:2000 core rules book p.??",
+			"FirstAid"					: "See Twilight:2000 core rules book p.??",
+			"Rally"						: "See Twilight:2000 core rules book p.??",
+			"EnterExit"					: "See Twilight:2000 core rules book p.??",
+			
+			"Cover"						: "See Twilight:2000 core rules book p.??",
+			"FulltoPartial"				: "See Twilight:2000 core rules book p.??",
+			"Run"						: "See Twilight:2000 core rules book p.??",
+			"CrossBarier"				: "See Twilight:2000 core rules book p.??",
+			"GetUp"						: "See Twilight:2000 core rules book p.??",
+			"Shove"						: "See Twilight:2000 core rules book p.??",
+			"Disarm"					: "See Twilight:2000 core rules book p.??",
+			"GrappleAttack"				: "See Twilight:2000 core rules book p.??",
+			"Retreat"					: "See Twilight:2000 core rules book p.??",
+			"Reload"					: "See Twilight:2000 core rules book p.??",
+			
+			"Drop"						: "See Twilight:2000 core rules book p.??",
+			"PartialtoFull"				: "See Twilight:2000 core rules book p.??"
+		}
+	},
+	
+    "enhancedcombathud.themeOptions.mainAction" : "Slow action Colors",
+    "enhancedcombathud.themeOptions.bonusAction" : "Fast action Colors",
+    "enhancedcombathud.themeOptions.freeAction" : "Free action Colors",
+    "enhancedcombathud.themeOptions.reaction" : "not used"
+}

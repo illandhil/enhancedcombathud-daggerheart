@@ -1,0 +1,54 @@
+{
+  "id": "enhancedcombathud-daggerheart",
+  "title": "Argon - Combat HUD (Daggerheart)",
+  "description": "Adds Daggerheart support for Argon - Combat HUD.",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "illandhil"
+    }
+  ],
+  "compatibility": {
+    "minimum": "11",
+    "verified": "13"
+  },
+    "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json",
+      "flags": {}
+    }
+  ],
+  "styles": [
+    "styles/argon-daggerheart-styles.css"
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "daggerheart",
+        "type": "system",
+        "compatibility": {
+          "minimum": "1.0.0"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "enhancedcombathud",
+        "type": "module",
+        "compatibility": {
+          "minimum": "4.0.0"
+        }
+      }
+    ]
+  },
+  "scripts": [
+  ],
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "url": "https://github.com/your-username/enhancedcombathud-daggerheart",
+  "manifest": "https://github.com/your-username/enhancedcombathud-daggerheart/releases/latest/download/module.json",
+  "download": "https://github.com/your-username/enhancedcombathud-daggerheart/releases/download/1.0.0/module.zip"
+}

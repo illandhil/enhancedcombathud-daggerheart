@@ -1,0 +1,46 @@
+.extended-combat-hud .daggerheart-action {
+    border-radius: 6px;
+    padding: 4px;
+    margin: 2px;
+    background: rgba(30, 30, 30, 0.8);
+    transition: background 0.2s ease;
+}
+
+.extended-combat-hud .daggerheart-action:hover {
+    background: rgba(80, 80, 80, 0.9);
+}
+
+.extended-combat-hud .daggerheart-passive {
+    opacity: 0.85;
+    border: 1px solid #aaa;
+    font-style: italic;
+}
+
+ .extended-combat-hud .portrait-hud {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.dh-drawer-button {
+  font-size: 1.2rem;         /* bigger text */
+  padding: 6px 10px;
+  margin: 2px 0;
+  border: none;
+  background-color: #222;
+  color: #eee;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 8px;
+  align-items: center;
+  border-radius: 4px;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.dh-drawer-button:hover {
+  background-color: #444;
+}
+

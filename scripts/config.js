@@ -1,0 +1,622 @@
+import { MODULE_ID } from "./main.js";
+import { rollTrait } from "./utils.js";
+
+export function initConfig() {
+  Hooks.on("argonInit", (CoreHUD) => {
+    const ARGON = CoreHUD.ARGON;
+    
+    // --- Get Argon's Component Classes ---
+    if (!ARGON) {
+      return ui.notifications.error(
+        "Argon - Daggerheart | Could not find CONFIG.ARGON."
+      );
+    }
+    const ItemButton = ARGON.MAIN.BUTTONS.ItemButton;
+    const ButtonPanelButton = ARGON.MAIN.BUTTONS.ButtonPanelButton;
+    const AccordionPanel = ARGON.MAIN.BUTTON_PANELS.ACCORDION.AccordionPanel;
+    const AccordionPanelCategory =
+      ARGON.MAIN.BUTTON_PANELS.ACCORDION.AccordionPanelCategory;
+
+    // --- Define All Custom Components for Daggerheart ---
+
+    class DummyComponent extends ARGON.CORE.ArgonComponent {
+      async render() {
+        this.element.classList.add("hidden");
+        return this.element;
+      }
+    }
+
+    class DaggerheartDrawerButton {
+      constructor(buttonData, id) {
+        this.buttonData = buttonData; // array of label objects { label, onClick? }
+        this.id = id;
+        this.element = document.createElement("button");
+        this.element.classList.add("dh-drawer-button");
+      }
+
+      async render() {
+        // Clear old content
+        this.element.innerHTML = "";
+
+        // Create spans for each label in grid columns
+        for (const data of this.buttonData) {
+          const span = document.createElement("span");
+          span.textContent = data.label || "";
+          if (data.style) span.style = data.style;
+          this.element.appendChild(span);
+
+          // If there's an onClick handler, add listener
+          if (data.onClick) {
+            this.element.style.cursor = "pointer";
+            this.element.addEventListener("click", data.onClick);
+          }
+        }
+        return this.element;
+      }
+
+      setGrid(gridCols) {
+        this.element.style.display = "grid";
+        this.element.style.gridTemplateColumns = gridCols || "1fr";
+      }
+
+      setAlign(alignArr) {
+        const spans = this.element.querySelectorAll("span");
+        spans.forEach((span, idx) => {
+          span.style.textAlign = alignArr?.[idx] || "left";
+        });
+      }
+    }
+
+    class DaggerheartTraitsPanel extends ARGON.DRAWER.DrawerPanel {
+      constructor(...args) {
+        super(...args);
+      }
+
+      get title() {
+        return "Traits";
+      }
+
+      get categories() {
+        // If the actor is an adversary, return empty to hide the traits panel
+        if (!this.actor || this.actor.type === "adversary") return [];
+
+        if (!this.actor?.system?.traits) return [];
+
+        const traits = this.actor.system.traits;
+
+        // Map traits to buttons
+        const buttons = Object.entries(traits).map(([key, val]) => {
+          return new DaggerheartDrawerButton(
+            [
+              {
+                label: key.charAt(0).toUpperCase() + key.slice(1),
+                onClick: (event) => {
+                  const data = {
+                    experiences: this.actor.system.experiences,
+                    traits: this.actor.system.traits,
+                  };
+                  rollTrait(this.actor, key, { event, data });
+                },
+              },
+              { label: val.value.toString() },
+            ],
+            key
+          );
+        });
+
+        return [
+          {
+            title: "Traits",
+            categories: [
+              {
+                gridCols: "2fr 1fr",
+                captions: [
+                  { label: "Trait", align: "left" },
+                  { label: "Value", align: "right" },
+                ],
+                buttons: buttons,
+              },
+            ],
+          },
+        ];
+      }
+
+      static get defaultOptions() {
+        return foundry.utils.mergeObject(super.defaultOptions, {
+          template:
+            "modules/enhancedcombathud-daggerheart/templates/traits-drawer.hbs",
+          id: "daggerheart-traits-drawer",
+          title: "Traits",
+          classes: ["daggerheart", "drawer", "traits"],
+          width: 300,
+          height: "auto",
+          resizable: true,
+        });
+      }
+    }
+
+    class DaggerheartButtonHud extends ARGON.ButtonHud {
+      constructor(actor) {
+        super(actor);
+      }
+
+      // Provide buttons to be rendered by the HUD
+      async _getButtons() {
+        return [
+          {
+            label: "Long Rest",
+            onClick: (event) => this._onLongRest(event),
+            icon: "fas fa-bed",
+          },
+          {
+            label: "Short Rest",
+            onClick: (event) => this._onShortRest(event),
+            icon: "fas fa-coffee",
+          },
+        ];
+      }
+
+      _onLongRest(event) {
+        if (event) event.preventDefault();
+        new game.system.api.applications.dialogs.Downtime(
+          this.actor,
+          false
+        ).render({ force: true });
+      }
+
+      _onShortRest(event) {
+        if (event) event.preventDefault();
+        new game.system.api.applications.dialogs.Downtime(
+          this.actor,
+          true
+        ).render({ force: true });
+      }
+    }
+
+    class DaggerheartActionButton extends ItemButton {
+      constructor({ item, action }) {
+        super({ item });
+        this.action = action;
+      }
+      get label() {
+        const itemName = this.item.name;
+        const actionName = this.action.name;
+        if (actionName === itemName || actionName === "Attack") return itemName;
+        // For the adversary's main attack, just show the action name (e.g., "Claws")
+        if (this.item.isProxy) return actionName;
+        if (actionName === undefined) {
+          return `${itemName}`;
+        } else {
+          return `${itemName}: ${actionName}`;
+        }
+      }
+      get icon() {
+        return this.action.img || this.item.img;
+      }
+      async _onLeftClick(event) {
+        if (this.item && typeof this.item.use === "function") {
+          this.item.use(event);
+        } else {
+          ui.notifications.warn(`Action for '${this.label}' is not usable.`);
+        }
+      }
+    }
+
+    class DaggerheartPortraitPanel extends ARGON.PORTRAIT.PortraitPanel {
+      async getStatBlocks() {
+        const actor = this.actor;
+        if (!actor) return [];
+        if (actor.type === "companion" || actor.type === "environment")
+          return [];
+
+        const statBlocks = [];
+        const system = actor.system;
+
+        if (actor.type === "character") {
+          const hp = system.resources?.hitPoints;
+          const evasion = system.evasion ?? 0;
+          const hope = system.resources?.hope;
+          const stress = system.resources?.stress;
+          const armor = actor.items
+            .filter((i) => i.type === "armor" && i.system.equipped)
+            .reduce(
+              (acc, i) => ({
+                value: acc.value + (i.system.marks?.value || 0),
+                max: acc.max + (i.system.baseScore || 0),
+              }),
+              { value: 0, max: 0 }
+            );
+
+          if (hp)
+            statBlocks.push([
+              { text: "HP" },
+              { text: `${hp.value ?? 0}/${hp.max ?? 0}` },
+            ]);
+          statBlocks.push([{ text: "Evasion" }, { text: evasion }]);
+          if (hope)
+            statBlocks.push([
+              { text: "Hope" },
+              { text: `${hope.value ?? 0}/${hope.max ?? 0}` },
+            ]);
+          if (stress)
+            statBlocks.push([
+              { text: "Stress" },
+              { text: `${stress.value ?? 0}/${stress.max ?? 0}` },
+            ]);
+          if (armor.max > 0)
+            statBlocks.push([
+              { text: "Armor" },
+              { text: `${armor.value}/${armor.max}` },
+            ]);
+        } else if (actor.type === "adversary") {
+          const hp = system.resources?.hitPoints;
+          const stress = system.resources?.stress;
+          const difficulty = system.difficulty ?? 0;
+          if (hp)
+            statBlocks.push([
+              { text: "HP" },
+              { text: `${hp.value ?? 0}/${hp.max ?? 0}` },
+            ]);
+          if (stress)
+            statBlocks.push([
+              { text: "Stress" },
+              { text: `${stress.value ?? 0}/${stress.max ?? 0}` },
+            ]);
+          statBlocks.push([{ text: "Difficulty" }, { text: difficulty }]);
+        }
+
+        return statBlocks;
+      }
+    }
+
+    class DaggerheartCategoryPanel extends AccordionPanel {
+      constructor({ buttons, id }) {
+        const category = new AccordionPanelCategory({ buttons });
+        super({ id, accordionPanelCategories: [category] });
+      }
+    }
+
+    class DaggerheartCategoryButton extends ButtonPanelButton {
+      constructor({ label, icon, buttons }) {
+        super();
+        this._label = label;
+        this._icon = icon;
+        this._buttons = buttons;
+      }
+      get label() {
+        return this._label;
+      }
+      get icon() {
+        return this._icon;
+      }
+      async _getPanel() {
+        return new DaggerheartCategoryPanel({
+          buttons: this._buttons,
+          id: this.label,
+        });
+      }
+    }
+
+    class DaggerheartActionPanel extends ARGON.MAIN.ActionPanel {
+      async _getButtons() {
+        const actor = this.actor;
+        if (
+          !actor ||
+          actor.type === "companion" ||
+          actor.type === "environment"
+        )
+          return [];
+
+        let categoryButtons = [];
+
+        // Helper to add buttons
+        const addButtons = (categoryKey, item, actions) => {
+          if (actions.length === 0) {
+            // If no actions, create a passive "dummy" action button
+            actions = [
+              {
+                name: item.name,
+                img: item.img,
+                actionType: "passive",
+                execute: () => {},
+              },
+            ];
+          }
+
+          for (const action of actions) {
+            if (!action.actionType) action.actionType = "passive";
+
+            const btn = new DaggerheartActionButton({ item, action });
+
+            btn.cssClasses = [
+              "daggerheart-action",
+              `daggerheart-${action.actionType}`,
+            ];
+
+            // Tooltip on every button
+            const cleanDescription =
+              item.system.description?.replace(/<[^>]*>?/gm, "") || item.name;
+            btn.element?.setAttribute("data-tooltip", cleanDescription);
+            btn.element?.setAttribute("data-tooltip-direction", "UP");
+
+            if (action.actionType === "passive") {
+              btn.cssClasses.push("daggerheart-passive");
+            }
+
+            categories[categoryKey].buttons.push(btn);
+          }
+        };
+
+        // --- LOGIC FOR CHARACTER ACTORS ---
+        if (actor.type === "character") {
+          // 1. Define categories and order
+          const categoryOrder = [
+            "equipment",
+            "domain",
+            "class",
+            "subclass",
+            "ancestry",
+            "community",
+            "feature",
+          ];
+
+          const categories = {
+            equipment: {
+              label: "Equipment",
+              icon: "icons/svg/item-bag.svg",
+              buttons: [],
+            },
+            domain: {
+              label: "Domain",
+              icon: "systems/daggerheart/assets/icons/documents/items/card-play.svg",
+              buttons: [],
+            },
+            class: {
+              label: "Class",
+              icon: "systems/daggerheart/assets/icons/documents/items/laurel-crown.svg",
+              buttons: [],
+            },
+            subclass: {
+              label: "Subclass",
+              icon: "systems/daggerheart/assets/icons/documents/items/laurels.svg",
+              buttons: [],
+            },
+            ancestry: {
+              label: "Ancestry",
+              icon: "systems/daggerheart/assets/icons/documents/items/family-tree.svg",
+              buttons: [],
+            },
+            community: {
+              label: "Community",
+              icon: "systems/daggerheart/assets/icons/documents/items/village.svg",
+              buttons: [],
+            },
+            feature: {
+              label: "Features",
+              icon: "systems/daggerheart/assets/icons/documents/items/stars-stack.svg",
+              buttons: [],
+            },
+          };
+
+          // 2. Helper to add buttons with tooltip for all buttons
+          const addButtons = (categoryKey, item, actions) => {
+            if (actions.length === 0) {
+              actions = [
+                {
+                  name: item.name,
+                  img: item.img,
+                  actionType: "passive",
+                  execute: () => {},
+                },
+              ];
+            }
+
+            for (const action of actions) {
+              if (!action.actionType) action.actionType = "passive";
+
+              const btn = new DaggerheartActionButton({ item, action });
+
+              btn.cssClasses = [
+                "daggerheart-action",
+                `daggerheart-${action.actionType}`,
+              ];
+
+              // Add tooltip on every button
+              const cleanDescription =
+                item.system.description?.replace(/<[^>]*>?/gm, "") || item.name;
+              btn.element?.setAttribute("data-tooltip", cleanDescription);
+              btn.element?.setAttribute("data-tooltip-direction", "UP");
+
+              if (action.actionType === "passive") {
+                btn.cssClasses.push("daggerheart-passive");
+              }
+
+              categories[categoryKey].buttons.push(btn);
+            }
+          };
+
+          // 3. Assign items to categories and add buttons
+          for (const item of actor.items) {
+            let categoryKey = "feature";
+            switch (item.type) {
+              case "weapon":
+              case "consumable":
+              case "armor":
+              case "loot":
+                categoryKey = "equipment";
+                break;
+              case "domainCard":
+                categoryKey = "domain";
+                break;
+              case "feature":
+                const origin = item.system.originItemType;
+                categoryKey = origin && categories[origin] ? origin : "feature";
+                break;
+            }
+
+            if (categories[categoryKey]) {
+              let itemActions = [];
+
+              if (item.system.attack) {
+                itemActions.push(item.system.attack);
+              }
+
+              if (
+                item.system.actions instanceof Map &&
+                item.system.actions.size > 0
+              ) {
+                itemActions.push(...item.system.actions.values());
+              } else if (
+                item.system.actions &&
+                typeof item.system.actions === "object"
+              ) {
+                itemActions.push(...Object.values(item.system.actions));
+              }
+
+              addButtons(categoryKey, item, itemActions);
+            }
+          }
+
+          // 4. Sort equipment buttons by type then name
+          if (categories.equipment.buttons.length > 0) {
+            const typeOrder = ["weapon", "armor", "consumable", "loot"];
+            categories.equipment.buttons.sort((a, b) => {
+              const aTypeIndex = typeOrder.indexOf(a.item.type);
+              const bTypeIndex = typeOrder.indexOf(b.item.type);
+              if (aTypeIndex !== bTypeIndex) return aTypeIndex - bTypeIndex;
+              return a.item.name.localeCompare(b.item.name);
+            });
+          }
+
+          // 5. Create category buttons in fixed order
+          const categoryButtons = [];
+          for (const key of categoryOrder) {
+            if (categories[key].buttons.length > 0) {
+              categoryButtons.push(
+                new DaggerheartCategoryButton(categories[key])
+              );
+            }
+          }
+
+          return categoryButtons;
+        }
+
+        // --- LOGIC FOR ADVERSARY ACTORS ---
+        else if (actor.type === "adversary") {
+          var categories = {
+            actions: {
+              label: "Actions",
+              icon: "icons/svg/sword.svg",
+              buttons: [],
+            },
+            feature: {
+              label: "Features",
+              icon: "systems/daggerheart/assets/icons/documents/items/stars-stack.svg",
+              buttons: [],
+            },
+          };
+
+          // Main adversary attack
+          if (actor.system.attack) {
+            const attackData = actor.system.attack;
+            if (!attackData.actionType) attackData.actionType = "passive";
+            const itemData = {
+              name: attackData.name,
+              img: attackData.img,
+              type: "feature",
+              system: { actions: { [attackData._id]: attackData } },
+            };
+            const tempItem = new Item.implementation(itemData, {
+              parent: actor,
+            });
+            tempItem.isProxy = true;
+            addButtons("actions", tempItem, [attackData]);
+          }
+
+          // Features
+          for (const item of actor.items) {
+            if (item.type !== "feature") continue;
+
+            let actions = [];
+            if (item.system.actions instanceof Map) {
+              actions = [...item.system.actions.values()];
+            } else if (
+              item.system.actions &&
+              typeof item.system.actions === "object"
+            ) {
+              actions = Object.values(item.system.actions);
+            }
+
+            if (actions.length > 0) {
+              addButtons("feature", item, actions);
+            } else {
+              // Passive (no actions) — create hover tooltip
+              const passiveAction = {
+                name: item.name,
+                img: item.img,
+                actionType: "passive",
+                execute: () => {}, // No click behavior
+              };
+
+              const passiveButton = new DaggerheartActionButton({
+                item,
+                action: passiveAction,
+              });
+
+              // Add style classes
+              passiveButton.cssClasses = [
+                "daggerheart-action",
+                "daggerheart-passive",
+              ];
+
+              // Tooltip with HTML-safe description
+              const cleanDescription = item.system.description || "";
+              passiveButton.element?.setAttribute(
+                "data-tooltip",
+                cleanDescription
+              );
+              passiveButton.element?.setAttribute(
+                "data-tooltip-direction",
+                "UP"
+              ); // Argon tooltip position
+
+              categories.feature.buttons.push(passiveButton);
+            }
+          }
+        }
+
+        // --- Final pass: create category buttons ---
+        for (const key in categories) {
+          if (categories[key].buttons.length > 0) {
+            categoryButtons.push(
+              new DaggerheartCategoryButton(categories[key])
+            );
+          }
+        }
+
+        return categoryButtons;
+      }
+    }
+    
+    const enableMacroPanel = game.settings.get(MODULE_ID, "macroPanel");
+
+    const mainPanels = [DaggerheartActionPanel];
+    if (enableMacroPanel) mainPanels.push(ARGON.PREFAB.MacroPanel);
+    mainPanels.push(ARGON.PREFAB.PassTurnPanel);
+
+    // Set supported types and register all components
+    CoreHUD.defineSupportedActorTypes([
+      "character",
+      "adversary",
+      //    "companion",
+      //    "environment",
+    ]);
+    CoreHUD.definePortraitPanel(DaggerheartPortraitPanel);
+    CoreHUD.defineDrawerPanel(DaggerheartTraitsPanel);
+    //CoreHUD.defineDrawerPanel(DaggerheartAdversaryReactionPanel);
+    CoreHUD.defineMainPanels(mainPanels);
+    CoreHUD.defineWeaponSets(DummyComponent);
+    CoreHUD.defineMovementHud(null);
+    CoreHUD.defineButtonHud(DaggerheartButtonHud);
+  });
+}

@@ -1,0 +1,20 @@
+<div class="ability-menu">
+  {{#each categories}}
+    <div class="collapsible-panel" data-index="{{@index}}">
+      <div class="ability-toggle">
+        <div class="ability ability-title" data-index="0">{{title}}</div>
+        {{#each this.categories}}
+          <div class="ability ability-title" data-index="{{@index}}">
+            {{#each captions}}
+              <span style="text-align: {{align}};">{{label}}</span>
+            {{/each}}
+          </div>
+          <div class="ability-list" data-index="{{@index}}">
+            {{!-- Buttons get appended here by ARGON DrawerPanel _renderInner() --}}
+          </div>
+        {{/each}}
+      </div>
+    </div>
+  {{/each}}
+</div>
+
