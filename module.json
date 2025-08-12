@@ -49,6 +49,6 @@
     "scripts/main.js"
   ],
   "url": "https://github.com/illandhil/enhancedcombathud-daggerheart",
-  "manifest": "https://github.com/illandhil/enhancedcombathud-daggerheart/releases/latest/download/module.json",
+  "manifest": "https://github.com/illandhil/enhancedcombathud-daggerheart/releases/download/0.0.2/module.json",
   "download": "https://github.com/illandhil/enhancedcombathud-daggerheart/releases/download/0.0.2/module.zip"
 }
