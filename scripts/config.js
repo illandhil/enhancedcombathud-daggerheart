@@ -4,7 +4,7 @@ import { rollTrait } from "./utils.js";
 export function initConfig() {
   Hooks.on("argonInit", (CoreHUD) => {
     const ARGON = CoreHUD.ARGON;
-    
+
     // --- Get Argon's Component Classes ---
     if (!ARGON) {
       return ui.notifications.error(
@@ -142,18 +142,49 @@ export function initConfig() {
 
       // Provide buttons to be rendered by the HUD
       async _getButtons() {
-        return [
-          {
-            label: "Long Rest",
-            onClick: (event) => this._onLongRest(event),
-            icon: "fas fa-bed",
-          },
-          {
-            label: "Short Rest",
-            onClick: (event) => this._onShortRest(event),
-            icon: "fas fa-coffee",
-          },
-        ];
+        if (!this.actor) return [];
+
+        if (this.actor.type === "adversary") {
+          // Buttons for adversaries
+          return [
+            {
+              label: "Reaction Roll",
+              onClick: (event) => this._onReactionRoll(event),
+              icon: "fas fa-dice",
+            },
+            {
+              label: "Special Ability",
+              onClick: (event) => this._onSpecialAbility(event),
+              icon: "fas fa-bolt",
+            },
+          ];
+        } else {
+          // Buttons for characters
+          return [
+            {
+              label: "Long Rest",
+              onClick: (event) => this._onLongRest(event),
+              icon: "fas fa-bed",
+            },
+            {
+              label: "Short Rest",
+              onClick: (event) => this._onShortRest(event),
+              icon: "fas fa-coffee",
+            },
+          ];
+        }
+      }
+
+      _onReactionRoll(event) {
+        if (event) event.preventDefault();
+        // Your reaction roll logic
+        ui.notifications.info(`Not Implimented yet - ${this.actor.name} makes a reaction roll!`);
+      }
+
+      _onSpecialAbility(event) {
+        if (event) event.preventDefault();
+        // Your special ability logic
+        ui.notifications.info(`Not Implimented yet - ${this.actor.name} uses a special ability!`);
       }
 
       _onLongRest(event) {
@@ -597,7 +628,7 @@ export function initConfig() {
         return categoryButtons;
       }
     }
-    
+
     const enableMacroPanel = game.settings.get(MODULE_ID, "macroPanel");
 
     const mainPanels = [DaggerheartActionPanel];
@@ -608,8 +639,8 @@ export function initConfig() {
     CoreHUD.defineSupportedActorTypes([
       "character",
       "adversary",
-      //    "companion",
-      //    "environment",
+      "companion", // will gracefully ignore companions currently
+      "environment", // will gracefully ignore environments currently
     ]);
     CoreHUD.definePortraitPanel(DaggerheartPortraitPanel);
     CoreHUD.defineDrawerPanel(DaggerheartTraitsPanel);

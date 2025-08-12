@@ -7,7 +7,3 @@ Hooks.on("setup", () => {
   registerSettings();
   initConfig();
 });
-
-
-
-
