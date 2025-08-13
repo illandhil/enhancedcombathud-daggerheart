@@ -1,6 +1,6 @@
 # Enhanced Combat HUD - Daggerheart
 
-A Foundry VTT module that enhances the combat HUD for the Daggerheart system.
+A Foundry VTT module that enhances the combat HUD for the Daggerheart system using the ARGON Combat Hud CORE.
 
 Warning: I smashed this together with very little javascript experience and some AI garbage.
 
@@ -11,7 +11,6 @@ Warning: I smashed this together with very little javascript experience and some
 
 ## Folder Structure
 
-- `assets/` - Images, icons, and other static resources.
 - `lang/` - Localization files for multiple languages.
 - `scripts/` - JavaScript files for HUD logic and interactivity.
 - `styles/` - CSS files for custom HUD styling.
