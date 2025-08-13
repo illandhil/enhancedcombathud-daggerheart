@@ -44,3 +44,10 @@
   background-color: #444;
 }
 
+.extended-combat-hud .ability-menu ul > li.ability-title {
+    justify-self: stretch;
+}
+
+.dh-drawer-button {
+justify-self: stretch;
+}

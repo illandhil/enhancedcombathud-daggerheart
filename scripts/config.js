@@ -111,8 +111,8 @@ export function initConfig() {
               {
                 gridCols: "2fr 1fr",
                 captions: [
-                  { label: "Trait", align: "left" },
-                  { label: "Value", align: "right" },
+                  { label: "Trait", align: "center" },
+                  { label: "Value", align: "center" },
                 ],
                 buttons: buttons,
               },
@@ -152,11 +152,11 @@ export function initConfig() {
               onClick: (event) => this._onReactionRoll(event),
               icon: "fas fa-dice",
             },
-            {
+            /*{
               label: "Special Ability",
               onClick: (event) => this._onSpecialAbility(event),
               icon: "fas fa-bolt",
-            },
+            },*/
           ];
         } else {
           // Buttons for characters
@@ -181,11 +181,11 @@ export function initConfig() {
         ui.notifications.info(`Not Implimented yet - ${this.actor.name} makes a reaction roll!`);
       }
 
-      _onSpecialAbility(event) {
+      /*_onSpecialAbility(event) {
         if (event) event.preventDefault();
         // Your special ability logic
         ui.notifications.info(`Not Implimented yet - ${this.actor.name} uses a special ability!`);
-      }
+      }*/
 
       _onLongRest(event) {
         if (event) event.preventDefault();
