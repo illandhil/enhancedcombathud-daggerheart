@@ -1,4 +1,5 @@
-# Enhanced Combat HUD - Daggerheart
+# Argon - Combat HUD (Daggerheart)
+Daggerheart - Argon integration
 
 A Foundry VTT module that enhances the combat HUD for the Daggerheart system using the ARGON Combat Hud CORE.
 
