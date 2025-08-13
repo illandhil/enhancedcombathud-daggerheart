@@ -51,3 +51,12 @@
 .dh-drawer-button {
 justify-self: stretch;
 }
+
+.extended-combat-hud .portrait-hud .player-button[data-tooltip="Roll Initiative"] {
+    display: none;
+}
+
+.extended-combat-hud .portrait-hud .player-buttons {
+    right: -110px;
+    top: calc(1rem - 70px);
+}

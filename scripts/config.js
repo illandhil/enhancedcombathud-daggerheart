@@ -1,9 +1,14 @@
 import { MODULE_ID } from "./main.js";
-import { rollTrait } from "./utils.js";
+import { rollCharacterTrait } from "./utils.js";
+import { rollAdversaryReaction } from "./utils.js";
 
 export function initConfig() {
   Hooks.on("argonInit", (CoreHUD) => {
     const ARGON = CoreHUD.ARGON;
+
+    // Declare dice from daggerheart
+    const DHRoll = game.system.api.dice.DHRoll;
+    const D20Roll = game.system.api.dice.D20Roll;
 
     // --- Get Argon's Component Classes ---
     if (!ARGON) {
@@ -81,6 +86,7 @@ export function initConfig() {
         if (!this.actor || this.actor.type === "adversary") return [];
 
         if (!this.actor?.system?.traits) return [];
+        if (!this.actor?.system?.experiences) return [];
 
         const traits = this.actor.system.traits;
 
@@ -91,11 +97,7 @@ export function initConfig() {
               {
                 label: key.charAt(0).toUpperCase() + key.slice(1),
                 onClick: (event) => {
-                  const data = {
-                    experiences: this.actor.system.experiences,
-                    traits: this.actor.system.traits,
-                  };
-                  rollTrait(this.actor, key, { event, data });
+                  rollCharacterTrait(this.actor, key);
                 },
               },
               { label: val.value.toString() },
@@ -152,7 +154,8 @@ export function initConfig() {
               onClick: (event) => this._onReactionRoll(event),
               icon: "fas fa-dice",
             },
-            /*{
+            /* Holding this code block in case I need it in the future
+            {
               label: "Special Ability",
               onClick: (event) => this._onSpecialAbility(event),
               icon: "fas fa-bolt",
@@ -177,13 +180,15 @@ export function initConfig() {
 
       _onReactionRoll(event) {
         if (event) event.preventDefault();
-        // Your reaction roll logic
+        // Reaction roll logic
+        rollAdversaryReaction(this.actor);
         ui.notifications.info(`Not Implimented yet - ${this.actor.name} makes a reaction roll!`);
       }
 
-      /*_onSpecialAbility(event) {
+      /*_Holding this code block in case I need it in the future
+      onSpecialAbility(event) {
         if (event) event.preventDefault();
-        // Your special ability logic
+        // Special ability logic
         ui.notifications.info(`Not Implimented yet - ${this.actor.name} uses a special ability!`);
       }*/
 
