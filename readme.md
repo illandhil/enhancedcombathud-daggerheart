@@ -6,7 +6,10 @@ A Foundry VTT module that enhances the combat HUD for the Daggerheart system usi
 theripper93's ARGON Core HUD is required. Shout out for the hard work ripper.
 https://github.com/theripper93/enhancedcombathud
 
-Warning: I smashed this together with very little javascript experience and some AI garbage.
+This is developed for the Foundryborne version of Daggerheart on FoundryVTT targeting V13.
+https://foundryborne.online/
+
+Warning: I smashed this together with very little javascript experience and some AI help.
 
 ## Features
 
@@ -21,6 +24,9 @@ Warning: I smashed this together with very little javascript experience and some
 - `templates/` - Handlebars templates for HUD UI components.
 
 ## Installation
+
+Using the install option in Foundry using the module.json
+https://github.com/illandhil/enhancedcombathud-daggerheart/releases/download/latest/module.json
 
 1. Download or clone this repository.
 2. Place the folder in your Foundry VTT `modules` directory.
