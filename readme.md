@@ -28,6 +28,7 @@ Warning: I smashed this together with very little javascript experience and some
 Using the install option in Foundry using the module.json
 https://github.com/illandhil/enhancedcombathud-daggerheart/releases/download/latest/module.json
 
+Or manually:
 1. Download or clone this repository.
 2. Place the folder in your Foundry VTT `modules` directory.
 3. Enable "Argon - Combat HUD (Daggerheart)" in your Foundry VTT game.
