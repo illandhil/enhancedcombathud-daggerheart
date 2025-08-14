@@ -34,9 +34,9 @@ Or manually:
 3. Enable "Argon - Combat HUD (Daggerheart)" in your Foundry VTT game.
 
 ## TO DO
-Minimal support for Companions and Environments
-Subdivision of Ability panels bsaed on logical grouping.
-Other
+Minimal support for Companions and Environments  
+Subdivision of Ability panels bsaed on logical grouping.  
+Other  
 
 ## Usage
 
