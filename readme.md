@@ -35,7 +35,7 @@ Or manually:
 
 ## TO DO
 Minimal support for Companions and Environments  
-Subdivision of Ability panels bsaed on logical grouping.  
+Subdivision of Ability panels based on logical grouping.  
 Build actual settings menu and provide enabling and disabling some features (Current settings are placeholder)  
 Build weapon bar  
 Localization  
