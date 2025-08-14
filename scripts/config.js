@@ -19,8 +19,7 @@ export function initConfig() {
     const ItemButton = ARGON.MAIN.BUTTONS.ItemButton;
     const ButtonPanelButton = ARGON.MAIN.BUTTONS.ButtonPanelButton;
     const AccordionPanel = ARGON.MAIN.BUTTON_PANELS.ACCORDION.AccordionPanel;
-    const AccordionPanelCategory =
-      ARGON.MAIN.BUTTON_PANELS.ACCORDION.AccordionPanelCategory;
+    const AccordionPanelCategory = ARGON.MAIN.BUTTON_PANELS.ACCORDION.AccordionPanelCategory;
 
     // --- Define All Custom Components for Daggerheart ---
 
