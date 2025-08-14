@@ -45,9 +45,6 @@ export async function rollCharacterTrait(actor, traitKey) {
     // This object contains the core parameters for the roll itself.
     roll: {
       trait: traitKey, // <-- This is the crucial part.
-      // You can also preset advantage, disadvantage, or a difficulty
-      // advantage: 1, // 1 for advantage, -1 for disadvantage
-      // difficulty: 12,
     },
 
     // This flag tells the system that a roll should be performed.
@@ -55,8 +52,6 @@ export async function rollCharacterTrait(actor, traitKey) {
   };
 
   // Call the actor's diceRoll method with the configuration.
-  //await actor.diceRoll(config)
-
   const result = await actor.diceRoll({
     ...config,
     headerTitle: `${game.i18n.localize("DAGGERHEART.GENERAL.dualityRoll")}: ${
@@ -141,4 +136,33 @@ export async function rollAdversaryReaction(actor) {
 
   // 4. Call the actor's diceRoll method with the configuration.
   await actor.diceRoll(config);
+}
+
+export async function rollCompanionAttack(actor) {
+  // 1. Validate actor.
+  if (!actor) {
+    ui.notifications.warn(
+      "No valid actor provided for the companion attack roll."
+    );
+    return;
+  }
+
+  // 2. Ensure actor is a companion.
+  if (actor.type !== "companion") {
+    ui.notifications.warn(
+      `Cannot make an attack roll for a non-companion actor of type "${actor.type}".`
+    );
+    return;
+  }
+
+  // 3. Check if attack action exists.
+  const attackAction = actor.system.attack;
+  if (!attackAction) {
+    ui.notifications.error(`Companion ${actor.name} has no attack defined.`);
+    return;
+  }
+
+  // 4. Use the attack action.
+  // The .use() method on an action handles preparing the roll configuration and executing it.
+  await attackAction.use({});
 }

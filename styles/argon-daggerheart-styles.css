@@ -17,10 +17,11 @@
 }
 
  .extended-combat-hud .portrait-hud {
-    align-items: flex-start;
+    align-items: flex-end;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    flex-direction: horizontal;
+    justify-content: center;
+    min-width: 405px;
 }
 
 .dh-drawer-button {
@@ -59,4 +60,63 @@ justify-self: stretch;
 .extended-combat-hud .portrait-hud .player-buttons {
     right: -110px;
     top: calc(1rem - 70px);
+}
+
+.extended-combat-hud .movement-hud:has(.button-hud-button) {
+    left: 405px;
+}
+
+.extended-combat-hud .movement-hud {
+    left: 405px;
+}
+
+/* --- Unique Colors Per Stat --- */
+
+/* Style for All Stat Blocks */
+.extended-combat-hud .portrait-hud .portrait-stat-block{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Style for HP */
+.extended-combat-hud .portrait-hud .portrait-stat-block #hp-value {
+  color: #00ff6e; /* SeaGreen */
+  text-shadow: 0 0 5px #000;
+  font-weight: bold;
+}
+
+/* Style for the Evasion value */
+.extended-combat-hud .portrait-hud .portrait-stat-block #evasion-value {
+  color: #008cff; /* SteelBlue */
+  text-shadow: 0 0 5px #000;
+  font-weight: bold;
+}
+
+/* Style for the Hope value */
+.extended-combat-hud .portrait-hud .portrait-stat-block #hope-value {
+  color: #ffd900; /* Gold */
+  text-shadow: 0 0 5px #000;
+  font-weight: bold;
+}
+
+/* Style for the Stress value */
+.extended-combat-hud .portrait-hud .portrait-stat-block #stress-value {
+  color: #ea00ff; /* Purple */
+  text-shadow: 0 0 5px #000;
+  font-weight: bold;
+}
+
+/* Style for the Armor value */
+.extended-combat-hud .portrait-hud .portrait-stat-block #armor-value {
+  color: #ff0000; /* FireBrick */
+  text-shadow: 0 0 5px #000;
+  font-weight: bold;
+}
+
+/* Style for the Difficulty value */
+.extended-combat-hud .portrait-hud .portrait-stat-block #difficulty-value {
+  color: #ff0000; /* FireBrick */
+  text-shadow: 0 0 5px #000;
+  font-weight: bold;
 }

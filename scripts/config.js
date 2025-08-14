@@ -1,6 +1,7 @@
 import { MODULE_ID } from "./main.js";
 import { rollCharacterTrait } from "./utils.js";
 import { rollAdversaryReaction } from "./utils.js";
+import { rollCompanionAttack } from "./utils.js";
 
 export function initConfig() {
   Hooks.on("argonInit", (CoreHUD) => {
@@ -77,12 +78,17 @@ export function initConfig() {
       }
 
       get title() {
-        return "Traits";
+        if (this.actor && (this.actor.type === "adversary")) {
+          return "Adversary"; // Return an empty string for these actor types
+        } else if (this.actor && this.actor.type === "companion") {
+          return "Companion"; // Return a specific title for characters
+        }
+        return "Characer - Traits"; 
       }
 
       get categories() {
-        // If the actor is an adversary, return empty to hide the traits panel
-        if (!this.actor || this.actor.type === "adversary") return [];
+        // If the actor is an adversary or companion, return empty to hide the traits panel
+        if (!this.actor || this.actor.type === "adversary" || this.actor.type === "companion") return [];
 
         if (!this.actor?.system?.traits) return [];
         if (!this.actor?.system?.experiences) return [];
@@ -107,7 +113,7 @@ export function initConfig() {
 
         return [
           {
-            title: "Traits",
+            title: "Character - Traits",
             categories: [
               {
                 gridCols: "2fr 1fr",
@@ -127,7 +133,7 @@ export function initConfig() {
           template:
             "modules/enhancedcombathud-daggerheart/templates/traits-drawer.hbs",
           id: "daggerheart-traits-drawer",
-          title: "Traits",
+          title: "Character - Traits",
           classes: ["daggerheart", "drawer", "traits"],
           width: 300,
           height: "auto",
@@ -160,6 +166,21 @@ export function initConfig() {
               icon: "fas fa-bolt",
             },*/
           ];
+        } else if (this.actor.type === "companion") {
+          // Buttons for adversaries
+          return [
+            {
+              label: "Attack Roll",
+              onClick: (event) => this._onCompanionAttackRoll(event),
+              icon: "fas fa-dice",
+            },
+            /* Holding this code block in case I need it in the future
+            {
+              label: "Special Ability",
+              onClick: (event) => this._onSpecialAbility(event),
+              icon: "fas fa-bolt",
+            },*/
+          ];
         } else {
           // Buttons for characters
           return [
@@ -181,7 +202,12 @@ export function initConfig() {
         if (event) event.preventDefault();
         // Reaction roll logic
         rollAdversaryReaction(this.actor);
-        //ui.notifications.info(`Not Implimented yet - ${this.actor.name} makes a reaction roll!`);
+      }
+
+      _onCompanionAttackRoll(event) {
+        if (event) event.preventDefault();
+        // CompanionAttackRoll roll logic
+        rollCompanionAttack(this.actor);
       }
 
       /*_Holding this code block in case I need it in the future
@@ -240,8 +266,10 @@ export function initConfig() {
     class DaggerheartPortraitPanel extends ARGON.PORTRAIT.PortraitPanel {
       async getStatBlocks() {
         const actor = this.actor;
-        if (!actor) return [];
-        if (actor.type === "companion" || actor.type === "environment")
+        if (
+          !actor ||          
+          actor.type === "environment"
+        )
           return [];
 
         const statBlocks = [];
@@ -264,24 +292,28 @@ export function initConfig() {
 
           if (hp)
             statBlocks.push([
-              { text: "HP" },
-              { text: `${hp.value ?? 0}/${hp.max ?? 0}` },
+              { text: "HP", id: "hp" },
+              { text: `${hp.value ?? 0} / ${hp.max ?? 0}`, id: "hp-value" },
             ]);
-          statBlocks.push([{ text: "Evasion" }, { text: evasion }]);
           if (hope)
             statBlocks.push([
-              { text: "Hope" },
-              { text: `${hope.value ?? 0}/${hope.max ?? 0}` },
+              { text: "Hope", id: "hope" },
+              { text: `${hope.value ?? 0} / ${hope.max ?? 0}`, id: "hope-value" },
             ]);
           if (stress)
             statBlocks.push([
-              { text: "Stress" },
-              { text: `${stress.value ?? 0}/${stress.max ?? 0}` },
+              { text: "Stress", id: "stress" },
+              { text: `${stress.value ?? 0} / ${stress.max ?? 0}`, id: "stress-value" },
             ]);
-          if (armor.max > 0)
+          if (armor?.max > 0)
             statBlocks.push([
-              { text: "Armor" },
-              { text: `${armor.value}/${armor.max}` },
+              { text: "Armor", id: "armor" },
+              { text: `${armor.value} / ${armor.max}`, id: "armor-value" },
+            ]);
+          if (evasion)
+            statBlocks.push([
+              { text: "Evasion", id: "evasion" }, 
+              { text: `${evasion ?? 0}`, id: "evasion-value" },
             ]);
         } else if (actor.type === "adversary") {
           const hp = system.resources?.hitPoints;
@@ -289,15 +321,32 @@ export function initConfig() {
           const difficulty = system.difficulty ?? 0;
           if (hp)
             statBlocks.push([
-              { text: "HP" },
-              { text: `${hp.value ?? 0}/${hp.max ?? 0}` },
+              { text: "HP", id: "hp" },
+              { text: `${hp.value ?? 0} / ${hp.max ?? 0}`, id: "hp-value" },
             ]);
           if (stress)
             statBlocks.push([
-              { text: "Stress" },
-              { text: `${stress.value ?? 0}/${stress.max ?? 0}` },
+              { text: "Stress", id: "stress" },
+              { text: `${stress.value ?? 0} / ${stress.max ?? 0}`, id: "stress-value" },
             ]);
-          statBlocks.push([{ text: "Difficulty" }, { text: difficulty }]);
+          if (difficulty)
+            statBlocks.push([
+            { text: "Difficulty", id: "difficulty" }, 
+            { text: `${difficulty ?? 0}`, id: "difficulty-value" },
+            ]);
+        } else if (actor.type === "companion") {
+          const stress = system.resources?.stress;
+          const evasion = system.evasion ?? 0;
+          if (stress)
+            statBlocks.push([
+              { text: "Stress", id: "stress" },
+              { text: `${stress.value ?? 0} / ${stress.max ?? 0}`, id: "stress-value" },
+            ]);
+          if (evasion)
+            statBlocks.push([
+              { text: "Evasion", id: "evasion" }, 
+              { text: `${evasion ?? 0}`, id: "evasion-value" },
+            ]);
         }
 
         return statBlocks;
@@ -336,8 +385,7 @@ export function initConfig() {
       async _getButtons() {
         const actor = this.actor;
         if (
-          !actor ||
-          actor.type === "companion" ||
+          !actor ||          
           actor.type === "environment"
         )
           return [];
@@ -643,8 +691,7 @@ export function initConfig() {
     CoreHUD.defineSupportedActorTypes([
       "character",
       "adversary",
-      "companion", // will gracefully ignore companions currently
-      "environment", // will gracefully ignore environments currently
+      "companion",
     ]);
     CoreHUD.definePortraitPanel(DaggerheartPortraitPanel);
     CoreHUD.defineDrawerPanel(DaggerheartTraitsPanel);
