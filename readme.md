@@ -3,6 +3,9 @@ Daggerheart - Argon integration
 
 A Foundry VTT module that enhances the combat HUD for the Daggerheart system using the ARGON Combat Hud CORE.
 
+theripper93's ARGON Core HUD is required. Shout out for the hard work ripper.
+https://github.com/theripper93/enhancedcombathud
+
 Warning: I smashed this together with very little javascript experience and some AI garbage.
 
 ## Features
