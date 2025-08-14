@@ -33,6 +33,11 @@ Or manually:
 2. Place the folder in your Foundry VTT `modules` directory.
 3. Enable "Argon - Combat HUD (Daggerheart)" in your Foundry VTT game.
 
+## TO DO
+Minimal support for Companions and Environments
+Subdivision of Ability panels bsaed on logical grouping.
+Other
+
 ## Usage
 
 Once enabled, the enhanced HUD will automatically appear during combat encounters in Daggerheart games.
