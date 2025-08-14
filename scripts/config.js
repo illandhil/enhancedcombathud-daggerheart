@@ -182,7 +182,7 @@ export function initConfig() {
         if (event) event.preventDefault();
         // Reaction roll logic
         rollAdversaryReaction(this.actor);
-        ui.notifications.info(`Not Implimented yet - ${this.actor.name} makes a reaction roll!`);
+        //ui.notifications.info(`Not Implimented yet - ${this.actor.name} makes a reaction roll!`);
       }
 
       /*_Holding this code block in case I need it in the future
