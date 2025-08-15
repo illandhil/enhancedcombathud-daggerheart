@@ -421,7 +421,7 @@ export function initConfig() {
 
         let categoryButtons = [];
 
-        // Helper to add buttons
+        // Helper to add category buttons
         const addButtons = (categoryKey, item, actions) => {
           if (actions.length === 0) {
             // If no actions, create a passive "dummy" action button
@@ -610,12 +610,26 @@ export function initConfig() {
 
               // Handle domain cards: take the first action if available, default to 'use'
               if (item.type === "domainCard") {
-                const actionsArr = item.system.actions ? Object.values(item.system.actions) : [];
-                if (actionsArr.length > 0) {
-                  const mainAction = actionsArr[0];
-                  mainAction.actionType = "use"; // Force to "use"
-                  itemActions.push(mainAction);
-                }
+                const actions = item.system.actions;
+
+                const hasActions =
+                  actions instanceof Map
+                    ? actions.size > 0
+                    : Array.isArray(actions)
+                      ? actions.length > 0
+                      : actions && typeof actions === "object"
+                        ? Object.keys(actions).length > 0
+                        : false;
+
+                // We only need a single button; .use() will fan out options
+                const action = {
+                  name: item.name,
+                  img: item.img,
+                  actionType: hasActions ? "use" : "passive",
+                  execute: () => {}, // click is handled by item.use() in DaggerheartActionButton
+                };
+
+                itemActions.push(action);
               } else {
                 // Original logic for other item types
                 if (item.system.attack) {
