@@ -292,7 +292,7 @@ export function initConfig() {
 
           if (hp)
             statBlocks.push([
-              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.hp.name"), id: "hp" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.hp.name"), id: "hp" },
               { text: `${hp.value ?? 0} / ${hp.max ?? 0}`, id: "hp-value" },
             ]);
           if (hope)
@@ -312,7 +312,7 @@ export function initConfig() {
             ]);
           if (evasion)
             statBlocks.push([
-              { text: "Evasion", id: "evasion" }, 
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.evasion"), id: "evasion" }, 
               { text: `${evasion ?? 0}`, id: "evasion-value" },
             ]);
         } else if (actor.type === "adversary") {
@@ -321,17 +321,17 @@ export function initConfig() {
           const difficulty = system.difficulty ?? 0;
           if (hp)
             statBlocks.push([
-              { text: "HP", id: "hp" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.hp"), id: "hp" },
               { text: `${hp.value ?? 0} / ${hp.max ?? 0}`, id: "hp-value" },
             ]);
           if (stress)
             statBlocks.push([
-              { text: "Stress", id: "stress" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.stress"), id: "stress" },
               { text: `${stress.value ?? 0} / ${stress.max ?? 0}`, id: "stress-value" },
             ]);
           if (difficulty)
             statBlocks.push([
-            { text: "Difficulty", id: "difficulty" }, 
+            { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.difficulty"), id: "difficulty" }, 
             { text: `${difficulty ?? 0}`, id: "difficulty-value" },
             ]);
         } else if (actor.type === "companion") {
@@ -339,12 +339,12 @@ export function initConfig() {
           const evasion = system.evasion ?? 0;
           if (stress)
             statBlocks.push([
-              { text: "Stress", id: "stress" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.stress"), id: "stress" },
               { text: `${stress.value ?? 0} / ${stress.max ?? 0}`, id: "stress-value" },
             ]);
           if (evasion)
             statBlocks.push([
-              { text: "Evasion", id: "evasion" }, 
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.evasion"), id: "evasion" }, 
               { text: `${evasion ?? 0}`, id: "evasion-value" },
             ]);
         }
@@ -484,6 +484,31 @@ export function initConfig() {
               icon: "systems/daggerheart/assets/icons/documents/items/stars-stack.svg",
               buttons: [],
             },
+            weapon: {
+              label: game.i18n.localize("enhancedcombathud-daggerheart.items.weapon.name"),
+              icon: "icons/svg/sword.svg",
+              buttons: [],
+            },
+            armor: {
+              label: game.i18n.localize("enhancedcombathud-daggerheart.items.armor.name"),
+              icon: "icons/svg/shield.svg",
+              buttons: [],
+            },
+            consumable: {
+              label: game.i18n.localize("enhancedcombathud-daggerheart.items.consumable.name"),
+              icon: "icons/svg/potion.svg",
+              buttons: [],
+            },
+            loot: {
+              label: game.i18n.localize("enhancedcombathud-daggerheart.items.loot.name"),
+              icon: "icons/svg/coins.svg",
+              buttons: [],
+            },
+            domainCard: {
+              label: game.i18n.localize("enhancedcombathud-daggerheart.items.domainCard.name"),
+              icon: "systems/daggerheart/assets/icons/documents/items/card-play.svg",
+              buttons: [],
+            }
           };
 
           // 2. Helper to add buttons with tooltip for all buttons
