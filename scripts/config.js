@@ -673,18 +673,33 @@ export function initConfig() {
           for (const item of actor.items) {
             if (item.type !== "feature") continue;
 
-            let actions = [];
+            let itemactions = [];
+            if (item.type === "feature") {
+                if (item.system.actions && typeof item.system.actions === "object") {
+                  // Find the main action (usually the first or matching item name)
+                  const actionsArr = Object.values(item.system.actions);
+                  let mainAction = actionsArr[0];
+                  for (const action of actionsArr) {
+                    if (action.name === item.name) {
+                      mainAction = action;
+                      break;
+                    }
+                  }
+                  if (mainAction) itemActions.push(mainAction);
+                }
+              } else {
             if (item.system.actions instanceof Map) {
-              actions = [...item.system.actions.values()];
+              itemactions = [...item.system.actions.values()];
             } else if (
               item.system.actions &&
               typeof item.system.actions === "object"
             ) {
-              actions = Object.values(item.system.actions);
+              itemactions = Object.values(item.system.actions);
+            }
             }
 
-            if (actions.length > 0) {
-              addButtons("feature", item, actions);
+            if (itemactions.length > 0) {
+              addButtons("feature", item, itemactions);
             } else {
               // Passive (no actions) — create hover tooltip
               const passiveAction = {
