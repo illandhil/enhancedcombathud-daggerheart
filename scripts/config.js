@@ -292,7 +292,7 @@ export function initConfig() {
 
           if (hp)
             statBlocks.push([
-              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.hp.name"), id: "hp" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.hp"), id: "hp" },
               { text: `${hp.value ?? 0} / ${hp.max ?? 0}`, id: "hp-value" },
             ]);
           if (hope)
@@ -354,17 +354,18 @@ export function initConfig() {
     }
 
     class DaggerheartCategoryPanel extends AccordionPanel {
-      constructor({ buttons, id }) {
-        const category = new AccordionPanelCategory({ buttons });
+      constructor({ buttons, id, label, icon, description }) {
+        const category = new AccordionPanelCategory({ label, icon, description, buttons });
         super({ id, accordionPanelCategories: [category] });
       }
     }
 
     class DaggerheartCategoryButton extends ButtonPanelButton {
-      constructor({ label, icon, buttons }) {
+      constructor({ label, icon, description, buttons }) {
         super();
         this._label = label;
         this._icon = icon;
+        this._description = description;
         this._buttons = buttons;
       }
       get label() {
@@ -373,10 +374,16 @@ export function initConfig() {
       get icon() {
         return this._icon;
       }
+      get description() {
+        return this._description;
+      }
       async _getPanel() {
         return new DaggerheartCategoryPanel({
           buttons: this._buttons,
           id: this.label,
+          label: this.label,
+          icon: this.icon,
+          description: this.description,
         });
       }
     }
@@ -503,11 +510,6 @@ export function initConfig() {
               label: game.i18n.localize("enhancedcombathud-daggerheart.items.loot.name"),
               icon: "icons/svg/coins.svg",
               buttons: [],
-            },
-            domainCard: {
-              label: game.i18n.localize("enhancedcombathud-daggerheart.items.domainCard.name"),
-              icon: "systems/daggerheart/assets/icons/documents/items/card-play.svg",
-              buttons: [],
             }
           };
 
@@ -567,23 +569,44 @@ export function initConfig() {
                 break;
             }
 
+            // Only include domain cards in loadout (not in vault)
+            if (categoryKey === "domain") {
+              if (item.system.inVault) continue;
+            }
+
             if (categories[categoryKey]) {
               let itemActions = [];
 
-              if (item.system.attack) {
-                itemActions.push(item.system.attack);
-              }
-
-              if (
-                item.system.actions instanceof Map &&
-                item.system.actions.size > 0
-              ) {
-                itemActions.push(...item.system.actions.values());
-              } else if (
-                item.system.actions &&
-                typeof item.system.actions === "object"
-              ) {
-                itemActions.push(...Object.values(item.system.actions));
+              // Only add the main action for domain cards
+              if (item.type === "domainCard") {
+                if (item.system.actions && typeof item.system.actions === "object") {
+                  // Find the main action (usually the first or matching item name)
+                  const actionsArr = Object.values(item.system.actions);
+                  let mainAction = actionsArr[0];
+                  for (const action of actionsArr) {
+                    if (action.name === item.name) {
+                      mainAction = action;
+                      break;
+                    }
+                  }
+                  if (mainAction) itemActions.push(mainAction);
+                }
+              } else {
+                // Original logic for other item types
+                if (item.system.attack) {
+                  itemActions.push(item.system.attack);
+                }
+                if (
+                  item.system.actions instanceof Map &&
+                  item.system.actions.size > 0
+                ) {
+                  itemActions.push(...item.system.actions.values());
+                } else if (
+                  item.system.actions &&
+                  typeof item.system.actions === "object"
+                ) {
+                  itemActions.push(...Object.values(item.system.actions));
+                }
               }
 
               addButtons(categoryKey, item, itemActions);

@@ -1,31 +1,47 @@
 .extended-combat-hud .daggerheart-action {
-    border-radius: 6px;
-    padding: 4px;
-    margin: 2px;
-    background: rgba(30, 30, 30, 0.8);
-    transition: background 0.2s ease;
+  border-radius: 6px;
+  padding: 4px;
+  margin: 2px;
+  background: rgba(30, 30, 30, 0.8);
+  transition: background 0.2s ease;
 }
 
 .extended-combat-hud .daggerheart-action:hover {
-    background: rgba(80, 80, 80, 0.9);
+  background: rgba(80, 80, 80, 0.9);
 }
 
 .extended-combat-hud .daggerheart-passive {
-    opacity: 0.85;
-    border: 1px solid #aaa;
-    font-style: italic;
+  opacity: 0.85;
+  border: 1px solid #aaa;
+  font-style: italic;
 }
 
- .extended-combat-hud .portrait-hud {
-    align-items: flex-end;
-    display: flex;
-    flex-direction: horizontal;
-    justify-content: center;
-    min-width: 405px;
+.extended-combat-hud .portrait-hud {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: horizontal;
+  justify-content: center;
+  min-width: 405px;
+}
+
+.extended-combat-hud .action-hud .feature-element-title {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.extended-combat-hud .action-hud .feature-accordion-title {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.extended-combat-hud .action-hud .feature-spell-slots {
+  display: none;
+}
+
+.extended-combat-hud .action-hud .features-accordion-content {
+    margin-bottom: 0px;
 }
 
 .dh-drawer-button {
-  font-size: 1.2rem;         /* bigger text */
+  font-size: 1.2rem; /* bigger text */
   padding: 6px 10px;
   margin: 2px 0;
   border: none;
@@ -46,34 +62,36 @@
 }
 
 .extended-combat-hud .ability-menu ul > li.ability-title {
-    justify-self: stretch;
+  justify-self: stretch;
 }
 
 .dh-drawer-button {
-justify-self: stretch;
+  justify-self: stretch;
 }
 
-.extended-combat-hud .portrait-hud .player-button[data-tooltip="Roll Initiative"] {
-    display: none;
+.extended-combat-hud
+  .portrait-hud
+  .player-button[data-tooltip="Roll Initiative"] {
+  display: none;
 }
 
 .extended-combat-hud .portrait-hud .player-buttons {
-    right: -110px;
-    top: calc(1rem - 70px);
+  right: -110px;
+  top: calc(1rem - 70px);
 }
 
 .extended-combat-hud .movement-hud:has(.button-hud-button) {
-    left: 405px;
+  left: 405px;
 }
 
 .extended-combat-hud .movement-hud {
-    left: 405px;
+  left: 405px;
 }
 
 /* --- Unique Colors Per Stat --- */
 
 /* Style for All Stat Blocks */
-.extended-combat-hud .portrait-hud .portrait-stat-block{
+.extended-combat-hud .portrait-hud .portrait-stat-block {
   display: flex;
   flex-direction: column;
   gap: 4px;
