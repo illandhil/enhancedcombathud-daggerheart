@@ -79,11 +79,11 @@ export function initConfig() {
 
       get title() {
         if (this.actor && (this.actor.type === "adversary")) {
-          return "Adversary"; // Return an empty string for these actor types
+          return game.i18n.localize("enhancedcombathud-daggerheart.hud.traits.adversary");
         } else if (this.actor && this.actor.type === "companion") {
-          return "Companion"; // Return a specific title for characters
+          return game.i18n.localize("enhancedcombathud-daggerheart.hud.traits.companion");
         }
-        return "Characer - Traits"; 
+        return game.i18n.localize("enhancedcombathud-daggerheart.hud.traits.character");
       }
 
       get categories() {
@@ -113,13 +113,13 @@ export function initConfig() {
 
         return [
           {
-            title: "Character - Traits",
+            title: game.i18n.localize("enhancedcombathud-daggerheart.hud.traits.character"),
             categories: [
               {
                 gridCols: "2fr 1fr",
                 captions: [
-                  { label: "Trait", align: "center" },
-                  { label: "Value", align: "center" },
+                  { label: game.i18n.localize("enhancedcombathud-daggerheart.hud.traits.trait"), align: "center" },
+                  { label: game.i18n.localize("enhancedcombathud-daggerheart.hud.traits.value"), align: "center" },
                 ],
                 buttons: buttons,
               },
@@ -133,7 +133,7 @@ export function initConfig() {
           template:
             "modules/enhancedcombathud-daggerheart/templates/traits-drawer.hbs",
           id: "daggerheart-traits-drawer",
-          title: "Character - Traits",
+          title: game.i18n.localize("enhancedcombathud-daggerheart.hud.traits.character"),
           classes: ["daggerheart", "drawer", "traits"],
           width: 300,
           height: "auto",
@@ -142,7 +142,7 @@ export function initConfig() {
       }
     }
 
-    class DaggerheartButtonHud extends ARGON.ButtonHud {
+   class DaggerheartButtonHud extends ARGON.ButtonHud {
       constructor(actor) {
         super(actor);
       }
@@ -155,7 +155,7 @@ export function initConfig() {
           // Buttons for adversaries
           return [
             {
-              label: "Reaction Roll",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.buttonhud.reactionRoll"),
               onClick: (event) => this._onReactionRoll(event),
               icon: "fas fa-dice",
             },
@@ -170,7 +170,7 @@ export function initConfig() {
           // Buttons for adversaries
           return [
             {
-              label: "Attack Roll",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.buttonhud.attackRoll"),
               onClick: (event) => this._onCompanionAttackRoll(event),
               icon: "fas fa-dice",
             },
@@ -185,12 +185,12 @@ export function initConfig() {
           // Buttons for characters
           return [
             {
-              label: "Long Rest",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.buttonhud.longRest"),
               onClick: (event) => this._onLongRest(event),
               icon: "fas fa-bed",
             },
             {
-              label: "Short Rest",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.buttonhud.shortRest"),
               onClick: (event) => this._onShortRest(event),
               icon: "fas fa-coffee",
             },
@@ -292,22 +292,22 @@ export function initConfig() {
 
           if (hp)
             statBlocks.push([
-              { text: "HP", id: "hp" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.hp.name"), id: "hp" },
               { text: `${hp.value ?? 0} / ${hp.max ?? 0}`, id: "hp-value" },
             ]);
           if (hope)
             statBlocks.push([
-              { text: "Hope", id: "hope" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.hope"), id: "hope" },
               { text: `${hope.value ?? 0} / ${hope.max ?? 0}`, id: "hope-value" },
             ]);
           if (stress)
             statBlocks.push([
-              { text: "Stress", id: "stress" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.stress"), id: "stress" },
               { text: `${stress.value ?? 0} / ${stress.max ?? 0}`, id: "stress-value" },
             ]);
           if (armor?.max > 0)
             statBlocks.push([
-              { text: "Armor", id: "armor" },
+              { text: game.i18n.localize("enhancedcombathud-daggerheart.hud.portrait.armor"), id: "armor" },
               { text: `${armor.value} / ${armor.max}`, id: "armor-value" },
             ]);
           if (evasion)
@@ -382,6 +382,11 @@ export function initConfig() {
     }
 
     class DaggerheartActionPanel extends ARGON.MAIN.ActionPanel {
+
+       get label() {
+        return game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.moves");
+            }
+
       async _getButtons() {
         const actor = this.actor;
         if (
@@ -445,37 +450,37 @@ export function initConfig() {
 
           const categories = {
             equipment: {
-              label: "Equipment",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.equipment"),
               icon: "icons/svg/item-bag.svg",
               buttons: [],
             },
             domain: {
-              label: "Domain",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.domain"),
               icon: "systems/daggerheart/assets/icons/documents/items/card-play.svg",
               buttons: [],
             },
             class: {
-              label: "Class",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.class"),
               icon: "systems/daggerheart/assets/icons/documents/items/laurel-crown.svg",
               buttons: [],
             },
             subclass: {
-              label: "Subclass",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.subclass"),
               icon: "systems/daggerheart/assets/icons/documents/items/laurels.svg",
               buttons: [],
             },
             ancestry: {
-              label: "Ancestry",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.ancestry"),
               icon: "systems/daggerheart/assets/icons/documents/items/family-tree.svg",
               buttons: [],
             },
             community: {
-              label: "Community",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.community"),
               icon: "systems/daggerheart/assets/icons/documents/items/village.svg",
               buttons: [],
             },
             feature: {
-              label: "Features",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.feature"),
               icon: "systems/daggerheart/assets/icons/documents/items/stars-stack.svg",
               buttons: [],
             },
@@ -588,12 +593,12 @@ export function initConfig() {
         else if (actor.type === "adversary") {
           var categories = {
             actions: {
-              label: "Actions",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.actions"),
               icon: "icons/svg/sword.svg",
               buttons: [],
             },
             feature: {
-              label: "Features",
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.feature"),
               icon: "systems/daggerheart/assets/icons/documents/items/stars-stack.svg",
               buttons: [],
             },
