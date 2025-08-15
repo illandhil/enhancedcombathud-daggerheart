@@ -39,11 +39,12 @@
                 "domain": "Domain",
                 "class": "Class",
                 "subclass": "Subclass",
-                "ancestry": "Ancestry",
-                "community": "Community",
+                "heritage": "Heritage",
                 "feature": "Features",
                 "actions": "Actions",
-                "moves": "Moves"
+                "moves": "Moves",
+                "use": "Use",
+                "passive": "Passive"
             },
             "traits": {
                 "adversary": "Adversary",

@@ -354,19 +354,35 @@ export function initConfig() {
     }
 
     class DaggerheartCategoryPanel extends AccordionPanel {
-      constructor({ buttons, id, label, icon, description }) {
-        const category = new AccordionPanelCategory({ label, icon, description, buttons });
-        super({ id, accordionPanelCategories: [category] });
+      constructor({ buttons, passiveButtons, id, label, icon, description }) {
+        const panelCategories = [];
+
+        if (buttons && buttons.length > 0) {
+          panelCategories.push(new AccordionPanelCategory({
+            label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.use"),
+            buttons: buttons
+          }));
+        }
+
+        if (passiveButtons && passiveButtons.length > 0) {
+          panelCategories.push(new AccordionPanelCategory({
+            label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.passive"),
+            buttons: passiveButtons
+          }));
+        }
+        
+        super({ id, accordionPanelCategories: panelCategories });
       }
     }
 
     class DaggerheartCategoryButton extends ButtonPanelButton {
-      constructor({ label, icon, description, buttons }) {
+      constructor({ label, icon, description, buttons, passiveButtons }) {
         super();
         this._label = label;
         this._icon = icon;
         this._description = description;
         this._buttons = buttons;
+        this._passiveButtons = passiveButtons;
       }
       get label() {
         return this._label;
@@ -380,6 +396,7 @@ export function initConfig() {
       async _getPanel() {
         return new DaggerheartCategoryPanel({
           buttons: this._buttons,
+          passiveButtons: this._passiveButtons,
           id: this.label,
           label: this.label,
           icon: this.icon,
@@ -436,9 +453,10 @@ export function initConfig() {
 
             if (action.actionType === "passive") {
               btn.cssClasses.push("daggerheart-passive");
+              categories[categoryKey].passiveButtons.push(btn);
+            } else {
+              categories[categoryKey].buttons.push(btn);
             }
-
-            categories[categoryKey].buttons.push(btn);
           }
         };
 
@@ -450,8 +468,7 @@ export function initConfig() {
             "domain",
             "class",
             "subclass",
-            "ancestry",
-            "community",
+            "heritage",
             "feature",
           ];
 
@@ -460,56 +477,61 @@ export function initConfig() {
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.equipment"),
               icon: "icons/svg/item-bag.svg",
               buttons: [],
+              passiveButtons: [],
             },
             domain: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.domain"),
               icon: "systems/daggerheart/assets/icons/documents/items/card-play.svg",
               buttons: [],
+              passiveButtons: [],
             },
             class: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.class"),
               icon: "systems/daggerheart/assets/icons/documents/items/laurel-crown.svg",
               buttons: [],
+              passiveButtons: [],
             },
             subclass: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.subclass"),
               icon: "systems/daggerheart/assets/icons/documents/items/laurels.svg",
               buttons: [],
+              passiveButtons: [],
             },
-            ancestry: {
-              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.ancestry"),
+            heritage: {
+              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.heritage"),
               icon: "systems/daggerheart/assets/icons/documents/items/family-tree.svg",
               buttons: [],
-            },
-            community: {
-              label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.community"),
-              icon: "systems/daggerheart/assets/icons/documents/items/village.svg",
-              buttons: [],
+              passiveButtons: [],
             },
             feature: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.feature"),
               icon: "systems/daggerheart/assets/icons/documents/items/stars-stack.svg",
               buttons: [],
+              passiveButtons: [],
             },
             weapon: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.items.weapon.name"),
               icon: "icons/svg/sword.svg",
               buttons: [],
+              passiveButtons: [],
             },
             armor: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.items.armor.name"),
               icon: "icons/svg/shield.svg",
               buttons: [],
+              passiveButtons: [],
             },
             consumable: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.items.consumable.name"),
               icon: "icons/svg/potion.svg",
               buttons: [],
+              passiveButtons: [],
             },
             loot: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.items.loot.name"),
               icon: "icons/svg/coins.svg",
               buttons: [],
+              passiveButtons: [],
             }
           };
 
@@ -544,9 +566,10 @@ export function initConfig() {
 
               if (action.actionType === "passive") {
                 btn.cssClasses.push("daggerheart-passive");
+                categories[categoryKey].passiveButtons.push(btn);
+              } else {
+                categories[categoryKey].buttons.push(btn);
               }
-
-              categories[categoryKey].buttons.push(btn);
             }
           };
 
@@ -563,9 +586,17 @@ export function initConfig() {
               case "domainCard":
                 categoryKey = "domain";
                 break;
+              case "ancestry":
+              case "community":
+                categoryKey = "heritage";
+                break;
               case "feature":
                 const origin = item.system.originItemType;
-                categoryKey = origin && categories[origin] ? origin : "feature";
+                if (origin === "ancestry" || origin === "community") {
+                  categoryKey = "heritage";
+                } else {
+                  categoryKey = origin && categories[origin] ? origin : "feature";
+                }
                 break;
             }
 
@@ -577,19 +608,13 @@ export function initConfig() {
             if (categories[categoryKey]) {
               let itemActions = [];
 
-              // Only add the main action for domain cards
+              // Handle domain cards: take the first action if available, default to 'use'
               if (item.type === "domainCard") {
-                if (item.system.actions && typeof item.system.actions === "object") {
-                  // Find the main action (usually the first or matching item name)
-                  const actionsArr = Object.values(item.system.actions);
-                  let mainAction = actionsArr[0];
-                  for (const action of actionsArr) {
-                    if (action.name === item.name) {
-                      mainAction = action;
-                      break;
-                    }
-                  }
-                  if (mainAction) itemActions.push(mainAction);
+                const actionsArr = item.system.actions ? Object.values(item.system.actions) : [];
+                if (actionsArr.length > 0) {
+                  const mainAction = actionsArr[0];
+                  mainAction.actionType = "use"; // Force to "use"
+                  itemActions.push(mainAction);
                 }
               } else {
                 // Original logic for other item types
@@ -613,21 +638,10 @@ export function initConfig() {
             }
           }
 
-          // 4. Sort equipment buttons by type then name
-          if (categories.equipment.buttons.length > 0) {
-            const typeOrder = ["weapon", "armor", "consumable", "loot"];
-            categories.equipment.buttons.sort((a, b) => {
-              const aTypeIndex = typeOrder.indexOf(a.item.type);
-              const bTypeIndex = typeOrder.indexOf(b.item.type);
-              if (aTypeIndex !== bTypeIndex) return aTypeIndex - bTypeIndex;
-              return a.item.name.localeCompare(b.item.name);
-            });
-          }
-
-          // 5. Create category buttons in fixed order
+          // 4. Create category buttons in fixed order
           const categoryButtons = [];
           for (const key of categoryOrder) {
-            if (categories[key].buttons.length > 0) {
+            if (categories[key].buttons.length > 0 || (categories[key].passiveButtons && categories[key].passiveButtons.length > 0)) {
               categoryButtons.push(
                 new DaggerheartCategoryButton(categories[key])
               );
@@ -644,11 +658,13 @@ export function initConfig() {
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.actions"),
               icon: "icons/svg/sword.svg",
               buttons: [],
+              passiveButtons: [],
             },
             feature: {
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.feature"),
               icon: "systems/daggerheart/assets/icons/documents/items/stars-stack.svg",
               buttons: [],
+              passiveButtons: [],
             },
           };
 
@@ -674,20 +690,6 @@ export function initConfig() {
             if (item.type !== "feature") continue;
 
             let itemactions = [];
-            if (item.type === "feature") {
-                if (item.system.actions && typeof item.system.actions === "object") {
-                  // Find the main action (usually the first or matching item name)
-                  const actionsArr = Object.values(item.system.actions);
-                  let mainAction = actionsArr[0];
-                  for (const action of actionsArr) {
-                    if (action.name === item.name) {
-                      mainAction = action;
-                      break;
-                    }
-                  }
-                  if (mainAction) itemActions.push(mainAction);
-                }
-              } else {
             if (item.system.actions instanceof Map) {
               itemactions = [...item.system.actions.values()];
             } else if (
@@ -695,7 +697,6 @@ export function initConfig() {
               typeof item.system.actions === "object"
             ) {
               itemactions = Object.values(item.system.actions);
-            }
             }
 
             if (itemactions.length > 0) {
@@ -731,14 +732,14 @@ export function initConfig() {
                 "UP"
               ); // Argon tooltip position
 
-              categories.feature.buttons.push(passiveButton);
+              categories.feature.passiveButtons.push(passiveButton);
             }
           }
         }
 
         // --- Final pass: create category buttons ---
         for (const key in categories) {
-          if (categories[key].buttons.length > 0) {
+          if (categories[key].buttons.length > 0 || categories[key].passiveButtons.length > 0) {
             categoryButtons.push(
               new DaggerheartCategoryButton(categories[key])
             );
