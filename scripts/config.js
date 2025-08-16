@@ -243,28 +243,6 @@ export function initConfig() {
       }
     }
 
-    // Buttons inside categories.
-    class DaggerheartActionButton extends ItemButton {
-      constructor({ item, action }) {
-        super({ item });
-        this.action = action;
-      }
-      get label() {
-        const itemName = this.item.name;
-        const actionName = this.action.name;
-        if (actionName === itemName || actionName === "Attack") return itemName;
-        if (this.item.isProxy) return actionName;
-        return actionName === undefined ? `${itemName}` : `${itemName}: ${actionName}`;
-      }
-      get icon() {
-        return this.action.img || this.item.img;
-      }
-      async _onLeftClick(event) {
-        if (this.item && typeof this.item.use === "function") this.item.use(event);
-        else ui.notifications.warn(`Action for '${this.label}' is not usable.`);
-      }
-    }
-
     // Portrait stats panel.
     class DaggerheartPortraitPanel extends ARGON.PORTRAIT.PortraitPanel {
       async getStatBlocks() {
@@ -312,24 +290,74 @@ export function initConfig() {
       }
     }
 
+    // Buttons inside categories.
+    class DaggerheartActionButton extends ItemButton {
+      constructor({ item, action }) {
+        super({ item });
+        this.action = action;
+      }
+      get label() {
+        const itemName = this.item.name;
+        const actionName = this.action.name;
+        if (actionName === itemName || actionName === "Attack") return itemName;
+        if (this.item.isProxy) return actionName;
+        return actionName === undefined ? `${itemName}` : `${itemName}: ${actionName}`;
+      }
+      get icon() {
+        // Always prefer the item icon for inventory (weapon, armor, consumable, loot)
+        const inventoryTypes = ["weapon", "armor", "consumable", "loot"];
+        if (inventoryTypes.includes(this.item.type)) return this.item.img;
+        return this.action.img || this.item.img;
+      }
+      async _onLeftClick(event) {
+        if (this.item && typeof this.item.use === "function") this.item.use(event);
+        else ui.notifications.warn(`Action for '${this.label}' is not usable.`);
+      }
+    }
+
     // Accordion view for a single category (splits into Use/Passive accordions)
     class DaggerheartCategoryPanel extends AccordionPanel {
       constructor({ buttons, passiveButtons, id, label, icon, description }) {
+        const inventoryOrder = ["weapon", "consumable", "armor", "loot"];
+
+        // Sort function for buttons
+        function sortButtons(buttons) {
+          return buttons.sort((a, b) => {
+            const aIndex = inventoryOrder.indexOf(a.item.type);
+            const bIndex = inventoryOrder.indexOf(b.item.type);
+
+            // If both are inventory, use the defined order
+            if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+
+            // If only one is inventory, it comes first
+            if (aIndex !== -1) return -1;
+            if (bIndex !== -1) return 1;
+
+            // Otherwise, sort alphabetically by label
+            return a.label.localeCompare(b.label);
+          });
+        }
+
+        // Sort buttons if they exist
+        const sortedButtons = buttons?.length ? sortButtons(buttons) : [];
+        const sortedPassiveButtons = passiveButtons?.length ? sortButtons(passiveButtons) : [];
+
         const panelCategories = [];
-        if (buttons?.length)
+        if (sortedButtons.length)
           panelCategories.push(
             new AccordionPanelCategory({
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.use"),
-              buttons,
+              buttons: sortedButtons,
             })
           );
-        if (passiveButtons?.length)
+        if (sortedPassiveButtons.length)
           panelCategories.push(
             new AccordionPanelCategory({
               label: game.i18n.localize("enhancedcombathud-daggerheart.hud.categories.passive"),
-              buttons: passiveButtons,
+              buttons: sortedPassiveButtons,
             })
           );
+
         super({ id, accordionPanelCategories: panelCategories });
       }
     }
@@ -382,7 +410,7 @@ export function initConfig() {
         // --- LOGIC FOR CHARACTER ACTORS ---
         if (actor.type === "character") {
           const categoryOrder = [
-            "equipment",
+            "inventory",
             "domain",
             "class",
             "subclass",
@@ -390,8 +418,8 @@ export function initConfig() {
             "feature",
           ];
           const categories = {
-            equipment: makeCategory(
-              "enhancedcombathud-daggerheart.hud.categories.equipment",
+            inventory: makeCategory(
+              "enhancedcombathud-daggerheart.hud.categories.inventory",
               "icons/svg/item-bag.svg"
             ),
             domain: makeCategory(
@@ -439,7 +467,7 @@ export function initConfig() {
               case "consumable":
               case "armor":
               case "loot":
-                categoryKey = "equipment";
+                categoryKey = "inventory";
                 break;
               case "domainCard":
                 categoryKey = "domain";
@@ -528,27 +556,23 @@ export function initConfig() {
             if (item.type !== "feature") continue;
 
             let itemActions = [];
-            if (item.system.actions instanceof Map)
-              itemActions = [...item.system.actions.values()];
-            else if (item.system.actions && typeof item.system.actions === "object")
-              itemActions = Object.values(item.system.actions);
-
-            if (itemActions.length > 0) {
-              addButtonsToCategory(categories, "feature", item, itemActions);
-            } else {
-              const passiveAction = {
-                name: item.name,
-                img: item.img,
-                actionType: "passive",
-                execute: () => {},
-              };
-              const passiveButton = new DaggerheartActionButton({ item, action: passiveAction });
-              passiveButton.cssClasses = ["daggerheart-action", "daggerheart-passive"];
-              const cleanDescription = item.system.description || "";
-              passiveButton.element?.setAttribute("data-tooltip", cleanDescription);
-              passiveButton.element?.setAttribute("data-tooltip-direction", "UP");
-              categories.feature.passiveButtons.push(passiveButton);
-            }
+              if (item.type === "feature") {
+                const action = {
+                  name: item.name,
+                  img: item.img,
+                  actionType: hasActions(item.system.actions) ? "use" : "passive",
+                  execute: () => {}, // actual fan-out happens in item.use()
+                };
+                itemActions.push(action);
+              } else {
+                if (item.system.attack) itemActions.push(item.system.attack);
+                if (item.system.actions instanceof Map && item.system.actions.size > 0) {
+                  itemActions.push(...item.system.actions.values());
+                } else if (item.system.actions && typeof item.system.actions === "object") {
+                  itemActions.push(...Object.values(item.system.actions));
+                }
+              }
+            addButtonsToCategory(categories, "feature", item, itemActions);
           }
 
           for (const key in categories) {

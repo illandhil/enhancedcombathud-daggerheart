@@ -35,8 +35,8 @@
                 "name": "Main Action"
             },
             "categories": {
-                "equipment": "Equipment",
-                "domain": "Domain",
+                "inventory": "Inventory",
+                "domain": "Domains",
                 "class": "Class",
                 "subclass": "Subclass",
                 "heritage": "Heritage",
