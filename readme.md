@@ -34,10 +34,6 @@ Or manually:
 3. Enable "Argon - Combat HUD (Daggerheart)" in your Foundry VTT game.
 
 ## TO DO
-Subdivision of Ability panels based on logical grouping.  
-Build actual settings menu and provide enabling and disabling some features (Current settings are placeholder)  
-Build weapon bar  
-More Localization  
 Other  
 
 ## Usage
