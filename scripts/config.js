@@ -766,6 +766,16 @@ export function initConfig() {
             // Only include domain cards in loadout (not in vault)
             if (categoryKey === "domain" && item.system.inVault) continue;
 
+              // Respect user setting to show/hide loot items in the Inventory category
+              if (item.type === "loot") {
+                try {
+                  const showLoot = game.settings.get(MODULE_ID, 'showLootItems');
+                  if (!showLoot) continue;
+                } catch (e) {
+                  // If settings lookup fails, default to showing loot
+                }
+              }
+
               if (categories[categoryKey]) {
               // If this is a subclass item, use the actor's active subclass.featureState and the subclass feature mapping
               let resolvedFeatureType = null;

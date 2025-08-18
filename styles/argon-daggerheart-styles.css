@@ -178,3 +178,17 @@
 .ech-tooltip-prop.secondary { color: #cfcfcf; margin: 2px 0; font-size: 0.9rem; }
 
 .ech-tooltip-resources { padding: 8px; border-top: 1px solid rgba(255,255,255,0.03); color: #bfcfcf; font-size: 0.9rem; }
+
+/* Improved tooltip element separation and clarity */
+.daggerheart-tooltip-card .summary { border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 10px; }
+.daggerheart-tooltip-card .name-stacked { display: flex; flex-direction: column; gap: 4px; }
+.daggerheart-tooltip-card .meta-row { display: flex; gap: 8px; align-items: center; color: #cfcfcf; font-size: 0.85rem; }
+.daggerheart-tooltip-card .meta-row .ech-tooltip-prop { background: rgba(0,0,0,0.25); padding: 4px 6px; border-radius: 4px; }
+.daggerheart-tooltip-card .description { padding-top: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.daggerheart-tooltip-card .ech-tooltip-resources { background: rgba(255,255,255,0.02); border-top: none; padding: 10px; }
+.daggerheart-tooltip-card .ech-tooltip-prop.primary { display: inline-block; padding: 2px 6px; border-radius: 3px; background: rgba(255,217,0,0.06); color: #ffd900; }
+.daggerheart-tooltip-card .ech-tooltip-prop.secondary { display: inline-block; padding: 2px 6px; border-radius: 3px; background: rgba(255,255,255,0.02); }
+.daggerheart-tooltip-card .summary .ech-tooltip-icon { flex-shrink: 0; }
+
+/* Make tooltip text more legible on dark backgrounds */
+.daggerheart-tooltip-card, .daggerheart-tooltip-card * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }

@@ -74,6 +74,15 @@ export function registerSettings() {
             default: true,
             onChange: () => ui.ARGON?.refresh(),
         },
+        showLootItems: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showLootItems.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showLootItems.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => ui.ARGON?.refresh(),
+        },
         macroPanel: {
             name: game.i18n.localize("enhancedcombathud-daggerheart.settings.macroPanel.name"),
             hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.macroPanel.hint"),

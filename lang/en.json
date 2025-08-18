@@ -45,6 +45,10 @@
         "name": "Show Tooltip Resources",
         "hint": "Display related resources in the tooltip (item or action resources)."
       },
+      "showLootItems": {
+        "name": "Show Loot in Inventory",
+        "hint": "Show loot items in the Inventory category of the HUD. Useful if you want quick access to loot without opening the full inventory."
+      },
       "showTooltipRange": {
         "name": "Show Tooltip Range",
         "hint": "Display action/attack range in tooltips."
