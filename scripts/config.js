@@ -11,6 +11,8 @@ export function initConfig() {
       );
     }
 
+  // No global setting: subclass display logic will use the actor's current subclass.featureState
+
   // ...using shared dlog from utils.js
 
     // --- Get Argon's Component Classes ---
@@ -100,7 +102,7 @@ export function initConfig() {
       }
     }
 
-    function addButtonsToCategory(categories, categoryKey, item, actions) {
+  function addButtonsToCategory(categories, categoryKey, item, actions, meta) {
       if (actions.length === 0) {
         actions = [
           {
@@ -112,10 +114,12 @@ export function initConfig() {
         ];
       }
 
-      for (const action of actions) {
+    for (const action of actions) {
         if (!action.actionType) action.actionType = "passive";
 
   const btn = new DaggerheartActionButton({ item, action });
+  // attach featureType metadata when provided (used for ordering subclass buttons)
+  if (meta && meta.featureType) btn.featureType = meta.featureType;
   dlog('debugActions', 'addButtonsToCategory created', { item: item.name, action: action.name, type: action.actionType });
         btn.cssClasses = ["daggerheart-action", `daggerheart-${action.actionType}`];
 
@@ -637,6 +641,12 @@ export function initConfig() {
         // Sort function for buttons
         function sortButtons(buttons) {
           return buttons.sort((a, b) => {
+            // If both buttons have a featureType (subclass ordering), use that order first
+            const featureOrder = { foundation: 0, specialization: 1, mastery: 2 };
+            const fa = a.featureType ?? null;
+            const fb = b.featureType ?? null;
+            if (fa && fb && fa !== fb) return (featureOrder[fa] ?? 0) - (featureOrder[fb] ?? 0);
+
             const aIndex = inventoryOrder.indexOf(a.item.type);
             const bIndex = inventoryOrder.indexOf(b.item.type);
 
@@ -790,6 +800,9 @@ export function initConfig() {
             ),
           };
 
+          // temporary collection for subclass items so we can order them by featureState
+          const subclassQueue = [];
+
           for (const item of actor.items) {
             let categoryKey = "feature";
             switch (item.type) {
@@ -823,7 +836,65 @@ export function initConfig() {
             // Only include domain cards in loadout (not in vault)
             if (categoryKey === "domain" && item.system.inVault) continue;
 
-            if (categories[categoryKey]) {
+              if (categories[categoryKey]) {
+              // If this is a subclass item, use the actor's active subclass.featureState and the subclass feature mapping
+              let resolvedFeatureType = null;
+              if (categoryKey === 'subclass') {
+                try {
+                  // Determine currently active subclass (class or multiclass)
+                  const activeSubclass = (actor.system.class?.subclass) || (actor.system.multiclass?.subclass) || null;
+                  if (!activeSubclass) continue;
+
+                  // Normalize subclassState: boolean true => 2 (foundation + specialization)
+                  const rawState = activeSubclass.system?.featureState;
+                  const subclassState = rawState === true || rawState === 'true' ? 2 : Number(rawState) || 0;
+
+                  // Build features lookup and try to resolve this item's declared feature type
+                  const features = Array.isArray(activeSubclass.system?.features) ? activeSubclass.system.features : [];
+                  const matches = features.find((f) => {
+                    if (!f || !f.item) return false;
+                    const ref = f.item;
+                    // ref may be a string like 'Actor.x.Item.<id>' or an object with a uuid property
+                    if (typeof ref === 'string') {
+                      if (ref === item.uuid || ref === item._id) return true;
+                      if (ref.endsWith(`.Item.${item._id}`)) return true;
+                    } else if (typeof ref === 'object' && ref.uuid) {
+                      if (ref.uuid === item.uuid) return true;
+                      if (String(ref.uuid).endsWith(`.Item.${item._id}`)) return true;
+                    }
+                    return false;
+                  });
+
+                  const featureType = matches?.type ?? null;
+
+                  // Allowed types are cumulative: foundation always; specialization if state>=2; mastery if state>=3
+                  const allowed = new Set(['foundation']);
+                  if (subclassState >= 2) allowed.add('specialization');
+                  if (subclassState >= 3) allowed.add('mastery');
+
+                  if (featureType) {
+                    if (!allowed.has(featureType)) continue;
+                    resolvedFeatureType = featureType;
+                  } else {
+                    // If we couldn't map this item in the subclass features list, be permissive for
+                    // foundation+specialization when subclassState >=2 (so boolean true works), but
+                    // require subclassState>=3 for suspected mastery items (heuristic).
+                    const lower = (item.name || '').toLowerCase();
+                    if (lower.includes('master') || lower.includes('mastery')) {
+                      if (subclassState < 3) continue;
+                      resolvedFeatureType = 'mastery';
+                    } else if (subclassState < 2) {
+                      // only foundation is allowed and we can't confirm, so include only if we assume foundation
+                      // (we'll allow it by default here)
+                      resolvedFeatureType = 'foundation';
+                    }
+                    if (!resolvedFeatureType) resolvedFeatureType = 'foundation';
+                  }
+                } catch (e) {
+                  dlog('debug', 'subclass display filter error', e, item && item.name);
+                  continue;
+                }
+              }
               let itemActions = [];
 
               // Domain cards: single button, use vs passive decided by presence of actions
@@ -844,7 +915,26 @@ export function initConfig() {
                 }
               }
 
-              addButtonsToCategory(categories, categoryKey, item, itemActions);
+              if (categoryKey === 'subclass') {
+                // resolvedFeatureType was set during the subclass filter; if unset, leave null
+                subclassQueue.push({ item, actions: itemActions, featureType: resolvedFeatureType });
+              } else {
+                addButtonsToCategory(categories, categoryKey, item, itemActions);
+              }
+            }
+          }
+
+          // After collecting all items, add subclass items in order: foundation -> specialization -> mastery
+          if (subclassQueue.length > 0) {
+            const orderMap = { foundation: 0, specialization: 1, mastery: 2 };
+            subclassQueue.sort((a, b) => {
+              const oa = orderMap[a.featureType] ?? 0;
+              const ob = orderMap[b.featureType] ?? 0;
+              if (oa !== ob) return oa - ob;
+              return (a.item.name || '').localeCompare(b.item.name || '');
+            });
+            for (const entry of subclassQueue) {
+              addButtonsToCategory(categories, 'subclass', entry.item, entry.actions, { featureType: entry.featureType });
             }
           }
 
