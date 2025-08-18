@@ -59,7 +59,7 @@
       },
       "showPassiveActions": {
         "name": "Show Passive Actions",
-        "hint": "Toggle the display of passive actions in the HUD."
+        "hint": "Toggle the display of passive actions in the HUD that do not have a clickable ability, but have tooltips."
       },
       "debug": {
         "name": "Debug",

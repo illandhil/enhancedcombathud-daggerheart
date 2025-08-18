@@ -1,7 +1,5 @@
 import { MODULE_ID } from "./main.js";
-import { rollCharacterTrait } from "./utils.js";
-import { rollAdversaryReaction } from "./utils.js";
-import { rollCompanionAttack } from "./utils.js";
+import { rollCharacterTrait, rollAdversaryReaction, rollCompanionAttack } from "./utils.js";
 
 export function initConfig() {
   Hooks.on("argonInit", (CoreHUD) => {
@@ -11,6 +9,16 @@ export function initConfig() {
       return ui.notifications.error(
         "Argon - Daggerheart | Could not find CONFIG.ARGON."
       );
+    }
+
+    // --- Debug helper (master-only) ---
+    function dlog(...args) {
+      try {
+        if (!game.settings.get(MODULE_ID, 'debug')) return;
+        console.debug('enhancedcombathud-daggerheart:DEBUG', ...args);
+      } catch (e) {
+        console.debug('enhancedcombathud-daggerheart:DEBUG error', e);
+      }
     }
 
     // --- Get Argon's Component Classes ---
@@ -44,6 +52,7 @@ export function initConfig() {
       if (!rawCost) return "";
       try {
         if (Array.isArray(rawCost)) {
+          dlog('debugCost', 'formatCost array input', rawCost, item);
           return rawCost
             .map((c) => {
               const value = c?.value ?? c?.amount ?? c?.qty ?? "";
@@ -75,6 +84,7 @@ export function initConfig() {
               }
 
               if (label === 'Special') {
+                dlog('debugCost', 'formatCost special label for', c, '->', label);
                 return `${label}`.trim();
               } else {
                 return `${value ?? ""} ${label}`.trim();
@@ -92,7 +102,8 @@ export function initConfig() {
 
         return String(rawCost);
       } catch (e) {
-        console.warn("enhancedcombathud-daggerheart: formatCost failed", e);
+  console.warn("enhancedcombathud-daggerheart: formatCost failed", e);
+  dlog('debugCost', 'formatCost exception', e, rawCost, item);
         return "";
       }
     }
@@ -112,7 +123,8 @@ export function initConfig() {
       for (const action of actions) {
         if (!action.actionType) action.actionType = "passive";
 
-        const btn = new DaggerheartActionButton({ item, action });
+  const btn = new DaggerheartActionButton({ item, action });
+  dlog('debugActions', 'addButtonsToCategory created', { item: item.name, action: action.name, type: action.actionType });
         btn.cssClasses = ["daggerheart-action", `daggerheart-${action.actionType}`];
 
   // Tooltips use Argon's Tooltip API; don't set data-* attributes here.
@@ -392,6 +404,18 @@ export function initConfig() {
           const showRecovery = game.settings.get(MODULE_ID, 'showTooltipRecovery');
           const showResourcesSetting = game.settings.get(MODULE_ID, 'showTooltipResources');
           const showDomainMeta = game.settings.get(MODULE_ID, 'showDomainMetadata');
+
+          dlog('debugTooltip', 'getTooltipData candidates', {
+            title,
+            rawDescriptionCandidate,
+            subtitle,
+            showCost,
+            showRecall,
+            showRecovery,
+            showResourcesSetting,
+            showDomainMeta,
+            icon
+          });
 
           // Header icon (prefer item.resource.icon when available)
           const icon = this.action?.img || this.item?.system?.resource?.icon || this.item?.img || "";

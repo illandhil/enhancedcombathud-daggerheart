@@ -84,6 +84,7 @@ export function registerSettings() {
             requiresReload: true,
             onChange: () => ui.ARGON?.refresh(),
         },
+        // Debug: enable verbose console logging when true
         debug: {
             name: game.i18n.localize("enhancedcombathud-daggerheart.settings.debug.name"),
             hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.debug.hint"),
