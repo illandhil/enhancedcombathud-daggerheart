@@ -11,11 +11,10 @@ export function initConfig() {
       );
     }
 
-  // No global setting: subclass display logic will use the actor's current subclass.featureState
+  // Subclass display follows the actor's active subclass.featureState (no global override).
+  // Uses shared dlog from utils.js for debug logging.
 
-  // ...using shared dlog from utils.js
-
-    // --- Get Argon's Component Classes ---
+  // Argon component classes
     const ItemButton = ARGON.MAIN.BUTTONS.ItemButton;
     const ButtonPanelButton = ARGON.MAIN.BUTTONS.ButtonPanelButton;
     const AccordionPanel = ARGON.MAIN.BUTTON_PANELS.ACCORDION.AccordionPanel;
@@ -41,7 +40,7 @@ export function initConfig() {
       return false;
     }
 
-  /** Format a Daggerheart cost into a human-readable string. */
+  /** Convert a Daggerheart cost structure into a readable string. */
   function formatCost(rawCost, item) {
       if (!rawCost) return "";
       try {
@@ -70,9 +69,8 @@ export function initConfig() {
                   if (found) label = found[0].charAt(0).toUpperCase() + found[0].slice(1);
                 }
 
-                // Final fallback: if we still don't have a friendly label, prefer the item's resource type
+                // Final fallback: if we still don't have a friendly label, mark it as 'Special'.
                 if ((!label || label === key) && item.system?.resource) {
-                  //label = item.system.resource.type ?? item.system.resource.name ?? 'Resource';
                   label = 'Special';
                 }
               }
@@ -427,7 +425,7 @@ export function initConfig() {
                       matchedAction = actionsObj[this.action._id] ?? Object.values(actionsObj).find(v => v._id === this.action._id);
                     }
                   } catch (idErr) {
-                    /* ignore id lookup errors */
+                    // ignore id lookup errors
                   }
                 }
 
@@ -466,7 +464,7 @@ export function initConfig() {
                       }
                     }
                   } catch (nmErr) {
-                    /* ignore name+img lookup errors */
+                    // ignore name+img lookup errors
                   }
                 }
 
@@ -477,10 +475,10 @@ export function initConfig() {
                   const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
                   if (dbg) console.info('ECH Tooltip Debug: resolved action cost', { actionId: this.action?._id, rawCostBefore: this.action?.cost, rawCostResolved: rawCost, matched: matchedAction });
                 } catch (e) {
-                  /* ignore settings lookup failure */
+                  // ignore settings lookup failure
                 }
               } catch (inner) {
-                /* ignore */
+                // ignore
               }
             }
                 // For domain cards, also surface item-level recallCost or resource.value as a separate property
@@ -524,9 +522,9 @@ export function initConfig() {
                   if (resText && showRecall) properties.push({ label: game.i18n.localize("enhancedcombathud-daggerheart.hud.tooltip.recallCost") + ": " + resText, secondary: true });
                 }
               }
-            } catch (e) {
-              /* ignore recall formatting errors */
-            }
+                } catch (e) {
+                  // ignore recall formatting errors
+                }
               // Add domain metadata (domain, level) when present
               try {
                 if (this.item?.type === 'domainCard') {
@@ -543,9 +541,9 @@ export function initConfig() {
                   }
                   if (level !== undefined && level !== null && showDomainMeta) properties.push({ label: `${game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.level')}: ${level}`, secondary: true });
                 }
-              } catch (e) {
-                /* ignore */
-              }
+                  } catch (e) {
+                    // ignore
+                  }
           } catch (e) {
             console.warn('enhancedcombathud-daggerheart: failed to compute cost for tooltip', e);
           }
@@ -561,7 +559,7 @@ export function initConfig() {
                 recovery = localized;
               }
             } catch (e) {
-              /* ignore localization lookup failures */
+              // ignore localization lookup failures
             }
             if (showRecovery) properties.push({ label: game.i18n.localize("enhancedcombathud-daggerheart.hud.tooltip.recovery") + ": " + recovery, secondary: true });
           }
@@ -615,15 +613,15 @@ export function initConfig() {
               } catch (e) {}
               properties.push({ label: game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.range') + ": " + rangeLabel, secondary: true });
             }
-          } catch (e) {
-            /* ignore range errors */
-          }
+            } catch (e) {
+              // ignore range errors
+            }
 
           try {
             const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
             if (dbg) console.info('ECH Tooltip Debug: description sources', { rawDescriptionCandidate, matchedAction, description });
           } catch (e) {
-            /* ignore */
+            // ignore
           }
           return { title, description, subtitle, properties, resources: showResourcesSetting ? resourcesList : [], icon, footerText: "" };
         } catch (err) {
