@@ -672,9 +672,25 @@ export function initConfig() {
             })
           );
 
-        super({ id, accordionPanelCategories: panelCategories });
+          // Pre-seed saved panel state so AccordionPanel.restoreState() (which runs
+          // during the parent's _renderInner) will pick up the desired subpanel defaults.
+          try {
+            const panelId = id ?? label;
+            const existing = ui.ARGON.getPanelState?.({ id: panelId });
+            if (!existing && panelCategories.length) {
+              const subPanelsState = panelCategories.map(() => true);
+              const state = { visible: false, subPanels: subPanelsState };
+              ui.ARGON.setPanelState?.(state, { id: panelId });
+            }
+          } catch (e) {
+            // ignore storage errors
+          }
+
+          super({ id, accordionPanelCategories: panelCategories });
+          this._defaultOpenHandled = false;
       }
-    }
+
+  }
 
     // Category tile in the main Action Panel.
     class DaggerheartCategoryButton extends ButtonPanelButton {
