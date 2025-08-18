@@ -138,3 +138,43 @@
   text-shadow: 0 0 5px #000;
   font-weight: bold;
 }
+
+/* Tooltip styling for daggerheart */
+.daggerheart-tooltip-card {
+  max-width: 340px;
+  background: rgba(20,20,20,0.95);
+  color: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.daggerheart-tooltip-card .summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+}
+
+.ech-tooltip-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 0 6px rgba(0,0,0,0.8);
+}
+
+.daggerheart-tooltip-card .name-stacked .name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.daggerheart-tooltip-card .description {
+  padding: 8px;
+  color: #ddd;
+  font-size: 0.95rem;
+}
+
+.ech-tooltip-prop.primary { color: #ffd900; margin: 4px 0; }
+.ech-tooltip-prop.secondary { color: #cfcfcf; margin: 2px 0; font-size: 0.9rem; }
+
+.ech-tooltip-resources { padding: 8px; border-top: 1px solid rgba(255,255,255,0.03); color: #bfcfcf; font-size: 0.9rem; }

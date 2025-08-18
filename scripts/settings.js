@@ -2,31 +2,68 @@ import { MODULE_ID } from "./main.js";
 
 export function registerSettings() {
     const settings = {
-        showWeaponsItems: {
-            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showWeaponsItems.name"),
-            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showWeaponsItems.hint"),
-            scope: "world",
-            config: true,
-            type: Boolean,
-            default: false,
-            onChange: (sett) => {
-                ui.ARGON.constructor.daggerheart.itemTypes.consumable = ui.ARGON.constructor.daggerheart.itemTypes.consumable.filter(i => i !== "weapon");
-                if(sett) ui.ARGON.constructor.daggerheart.itemTypes.consumable.push("weapon");
-                ui.ARGON.refresh()
-            },
-        },
-        showClassActions: {
-            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showClassActions.name"),
-            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showClassActions.hint"),
+        showTooltipCost: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipCost.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipCost.hint"),
             scope: "world",
             config: true,
             type: Boolean,
             default: true,
-            onChange: (sett) => {
-                ui.ARGON.constructor.daggerheart.mainBarFeatures = ui.ARGON.constructor.daggerheart.mainBarFeatures.filter(i => i !== "class");
-                if(sett) ui.ARGON.constructor.daggerheart.mainBarFeatures.push("class");
-                ui.ARGON.refresh()
-            },
+            onChange: () => ui.ARGON?.refresh(),
+        },
+        showTooltipRecallCost: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipRecallCost.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipRecallCost.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => ui.ARGON?.refresh(),
+        },
+        showTooltipRecovery: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipRecovery.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipRecovery.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => ui.ARGON?.refresh(),
+        },
+        showTooltipResources: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipResources.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipResources.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => ui.ARGON?.refresh(),
+        },
+        showDomainMetadata: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showDomainMetadata.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showDomainMetadata.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => ui.ARGON?.refresh(),
+        },
+        includeVaultDomainCards: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.includeVaultDomainCards.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.includeVaultDomainCards.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: false,
+            onChange: () => ui.ARGON?.refresh(),
+        },
+        showPassiveActions: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showPassiveActions.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showPassiveActions.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => ui.ARGON?.refresh(),
         },
         macroPanel: {
             name: game.i18n.localize("enhancedcombathud-daggerheart.settings.macroPanel.name"),
@@ -36,7 +73,16 @@ export function registerSettings() {
             type: Boolean,
             default: false,
             requiresReload: true,
-            onChange: () => ui.ARGON.refresh(),
+            onChange: () => ui.ARGON?.refresh(),
+        },
+        debug: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.debug.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.debug.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: false,
+            onChange: () => ui.ARGON?.refresh(),
         },
     };
 

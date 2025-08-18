@@ -39,6 +39,64 @@ export function initConfig() {
       return false;
     }
 
+  /** Format a Daggerheart cost into a human-readable string. */
+  function formatCost(rawCost, item) {
+      if (!rawCost) return "";
+      try {
+        if (Array.isArray(rawCost)) {
+          return rawCost
+            .map((c) => {
+              const value = c?.value ?? c?.amount ?? c?.qty ?? "";
+              const key = c?.key ?? c?.type ?? "";
+              const keyIsID = !!c?.keyIsID;
+
+              // Try to resolve common keys to readable labels
+              let label = key;
+              if (!label) label = "";
+              else if (!keyIsID) label = label.charAt(0).toUpperCase() + label.slice(1);
+
+              // If this looks like an ID, try some fallbacks to get a readable name
+              if (keyIsID && item) {
+                // Check item-level resource object
+                const itemRes = item.system?.resource;
+                if (itemRes && (itemRes.key === key || itemRes.id === key)) {
+                  label = itemRes.type || itemRes.name || 'Resource';
+                } else if (item.parent?.system?.resources) {
+                  const actorRes = item.parent.system.resources;
+                  const found = Object.entries(actorRes).find(([k, v]) => k === key || v?.id === key || v?.key === key);
+                  if (found) label = found[0].charAt(0).toUpperCase() + found[0].slice(1);
+                }
+
+                // Final fallback: if we still don't have a friendly label, prefer the item's resource type
+                if ((!label || label === key) && item.system?.resource) {
+                  //label = item.system.resource.type ?? item.system.resource.name ?? 'Resource';
+                  label = 'Special';
+                }
+              }
+
+              if (label === 'Special') {
+                return `${label}`.trim();
+              } else {
+                return `${value ?? ""} ${label}`.trim();
+              }
+            })
+            .filter(Boolean)
+            .join(", ");
+        }
+
+        if (typeof rawCost === "object") {
+          const value = rawCost?.value ?? rawCost?.amount ?? "";
+          const key = rawCost?.key ?? rawCost?.type ?? "";
+          return `${value} ${key}`.trim();
+        }
+
+        return String(rawCost);
+      } catch (e) {
+        console.warn("enhancedcombathud-daggerheart: formatCost failed", e);
+        return "";
+      }
+    }
+
     function addButtonsToCategory(categories, categoryKey, item, actions) {
       if (actions.length === 0) {
         actions = [
@@ -57,13 +115,13 @@ export function initConfig() {
         const btn = new DaggerheartActionButton({ item, action });
         btn.cssClasses = ["daggerheart-action", `daggerheart-${action.actionType}`];
 
-        const cleanDescription = item.system.description?.replace(/<[^>]*>?/gm, "") || item.name;
-        btn.element?.setAttribute("data-tooltip", cleanDescription);
-        btn.element?.setAttribute("data-tooltip-direction", "UP");
+  // Tooltips use Argon's Tooltip API; don't set data-* attributes here.
 
         if (action.actionType === "passive") {
           btn.cssClasses.push("daggerheart-passive");
-          categories[categoryKey].passiveButtons.push(btn);
+          // Respect user setting to show/hide passive actions
+          const showPassive = game.settings.get(MODULE_ID, 'showPassiveActions');
+          if (showPassive) categories[categoryKey].passiveButtons.push(btn);
         } else {
           categories[categoryKey].buttons.push(btn);
         }
@@ -82,7 +140,7 @@ export function initConfig() {
     // Components
     // =============================================================
 
-    // Minimal no-op component; used for Argon extension points we don't need.
+  // No-op Argon component.
     class DummyComponent extends ARGON.CORE.ArgonComponent {
       async render() {
         this.element.classList.add("hidden");
@@ -90,7 +148,7 @@ export function initConfig() {
       }
     }
 
-    // Simple multi-span button used in the Traits drawer grid.
+  // Multi-span button for the traits drawer.
     class DaggerheartDrawerButton {
       constructor(buttonData, id) {
         this.buttonData = buttonData;
@@ -128,7 +186,7 @@ export function initConfig() {
       }
     }
 
-    // Drawer panel showing character traits in a two-column grid.
+  // Traits drawer panel (two-column layout).
     class DaggerheartTraitsPanel extends ARGON.DRAWER.DrawerPanel {
       get title() {
         if (this.actor?.type === "adversary") {
@@ -188,7 +246,7 @@ export function initConfig() {
       }
     }
 
-    // Button HUD: short/long rest for characters; reaction/attack rolls for others.
+  // Button HUD for rests and quick rolls.
     class DaggerheartButtonHud extends ARGON.ButtonHud {
       async _getButtons() {
         if (!this.actor) return [];
@@ -290,7 +348,7 @@ export function initConfig() {
       }
     }
 
-    // Buttons inside categories.
+  // Category buttons
     class DaggerheartActionButton extends ItemButton {
       constructor({ item, action }) {
         super({ item });
@@ -304,7 +362,7 @@ export function initConfig() {
         return actionName === undefined ? `${itemName}` : `${itemName}: ${actionName}`;
       }
       get icon() {
-        // Always prefer the item icon for inventory (weapon, armor, consumable, loot)
+  // Prefer the item image for inventory types (weapon/armor/consumable/loot)
         const inventoryTypes = ["weapon", "armor", "consumable", "loot"];
         if (inventoryTypes.includes(this.item.type)) return this.item.img;
         return this.action.img || this.item.img;
@@ -312,6 +370,220 @@ export function initConfig() {
       async _onLeftClick(event) {
         if (this.item && typeof this.item.use === "function") this.item.use(event);
         else ui.notifications.warn(`Action for '${this.label}' is not usable.`);
+      }
+      get hasTooltip() {
+        return true;
+      }
+
+      async getTooltipData() {
+        try {
+          const title = this.label;
+          // Collect candidate descriptions; we'll prefer a matched/full action's description
+          // after we try to resolve the canonical action object.
+          let rawDescriptionCandidate = (this.action?.description || this.action?.system?.description || this.item?.system?.description || "");
+          let description = "";
+          // Use item.system.type for domain cards; otherwise show item.type
+          const subtitle = this.item.type === 'domainCard' ? (this.item?.system?.type || this.item.type) : (this.item.type || "");
+          const properties = [];
+
+          // Read tooltip display settings
+          const showCost = game.settings.get(MODULE_ID, 'showTooltipCost');
+          const showRecall = game.settings.get(MODULE_ID, 'showTooltipRecallCost');
+          const showRecovery = game.settings.get(MODULE_ID, 'showTooltipRecovery');
+          const showResourcesSetting = game.settings.get(MODULE_ID, 'showTooltipResources');
+          const showDomainMeta = game.settings.get(MODULE_ID, 'showDomainMetadata');
+
+          // Header icon (prefer item.resource.icon when available)
+          const icon = this.action?.img || this.item?.system?.resource?.icon || this.item?.img || "";
+
+          // Resolve the action or item cost (array or object)
+          try {
+            let rawCost = this.action?.cost ?? this.action?.system?.cost ?? this.item?.system?.cost ?? null;
+
+            // If no cost is found, look up the full action in `item.system.actions`.
+            // This finds the real action when the button holds a lightweight/synthetic one.
+            if ((!rawCost || (Array.isArray(rawCost) && rawCost.length === 0)) && this.item?.system?.actions) {
+              try {
+                const actionsObj = this.item.system.actions;
+                let matchedAction = null;
+
+                // Try matching by _id first
+                if (this.action?._id) {
+                  try {
+                    if (actionsObj instanceof Map) {
+                      matchedAction = actionsObj.get(this.action._id) ?? Array.from(actionsObj.values()).find(v => v._id === this.action._id);
+                    } else if (typeof actionsObj === 'object') {
+                      matchedAction = actionsObj[this.action._id] ?? Object.values(actionsObj).find(v => v._id === this.action._id);
+                    }
+                  } catch (idErr) {
+                    /* ignore id lookup errors */
+                  }
+                }
+
+                // If no id match, try matching by name and image
+                if (!matchedAction) {
+                  try {
+                    const values = actionsObj instanceof Map ? Array.from(actionsObj.values()) : Object.values(actionsObj || {});
+
+                    // Try matching by name and image
+                    matchedAction = values.find(v => v && v.name === this.action?.name && v.img === this.action?.img);
+                    if (matchedAction) {
+                      const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
+                      if (dbg) console.info('ECH Tooltip Debug: matched by name+img', { actionName: this.action?.name, actionImg: this.action?.img, matched: matchedAction });
+                    }
+
+                    // If still no match, prefer first action that has a cost
+                    if (!matchedAction) {
+                      const withCost = values.find(v => {
+                        const c = v?.cost ?? v?.system?.cost;
+                        return Array.isArray(c) ? c.length > 0 : !!c;
+                      });
+                      if (withCost) {
+                        matchedAction = withCost;
+                        const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
+                        if (dbg) console.info('ECH Tooltip Debug: matched by heuristic (first with cost)', { actionName: this.action?.name, actionImg: this.action?.img, matched: matchedAction });
+                      }
+                    }
+
+                    // Fallback: use the first action entry
+                    if (!matchedAction) {
+                      const first = values.length ? values[0] : null;
+                      if (first) {
+                        matchedAction = first;
+                        const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
+                        if (dbg) console.info('ECH Tooltip Debug: matched by fallback (first action)', { actionName: this.action?.name, actionImg: this.action?.img, matched: matchedAction });
+                      }
+                    }
+                  } catch (nmErr) {
+                    /* ignore name+img lookup errors */
+                  }
+                }
+
+                if (matchedAction) rawCost = matchedAction.cost ?? matchedAction.system?.cost ?? rawCost;
+
+                // Debug logging (controlled by module setting or window flag)
+                try {
+                  const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
+                  if (dbg) console.info('ECH Tooltip Debug: resolved action cost', { actionId: this.action?._id, rawCostBefore: this.action?.cost, rawCostResolved: rawCost, matched: matchedAction });
+                } catch (e) {
+                  /* ignore settings lookup failure */
+                }
+              } catch (inner) {
+                /* ignore */
+              }
+            }
+                // For domain cards, also surface item-level recallCost or resource.value as a separate property
+
+            // Prefer description from the matched/full action when available
+            try {
+              const matched = typeof matchedAction !== 'undefined' ? matchedAction : null;
+              const rawDescription = (matched && (matched.description || matched.system?.description)) || rawDescriptionCandidate;
+              description = rawDescription ? await TextEditor.enrichHTML(rawDescription, { async: true, relativeTo: this.item }) : "";
+              try { const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false); if (dbg) console.info('ECH Tooltip Debug: enriched description length', { len: (description||"").length }); } catch(e){}
+            } catch (e) {
+              // If enrichment fails, fall back to the candidate
+              try {
+                description = rawDescriptionCandidate ? await TextEditor.enrichHTML(rawDescriptionCandidate, { async: true, relativeTo: this.item }) : "";
+              } catch (ee) {
+                description = "";
+              }
+            }
+
+            const costText = typeof formatCost === 'function' ? formatCost(rawCost, this.item) : "";
+            try {
+              const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
+              if (dbg) console.info('ECH Tooltip Debug: costText', { actionId: this.action?._id, costText, rawCost });
+            } catch (e) {
+              /* ignore */
+            }
+            if (costText && showCost) properties.push({ label: game.i18n.localize("enhancedcombathud-daggerheart.hud.tooltip.cost") + ": " + costText, primary: true });
+
+            // If this is a domain card, also show the recallCost (if present) as a
+            // separate labeled property so users see both costs when available.
+            try {
+              if (this.item?.type === 'domainCard') {
+                const recallDefined = this.item?.system && (this.item.system.recallCost !== undefined && this.item.system.recallCost !== null);
+                if (recallDefined) {
+                  const recallRaw = [{ value: this.item.system.recallCost, key: 'recall', keyIsID: false }];
+                  const recallText = typeof formatCost === 'function' ? formatCost(recallRaw, this.item) : String(this.item.system.recallCost);
+                  if (recallText && showRecall) properties.push({ label: game.i18n.localize("enhancedcombathud-daggerheart.hud.tooltip.recallCost") + ": " + recallText, secondary: true });
+                } else if (this.item?.system?.resource && this.item.system.resource?.value !== undefined) {
+                  const resRaw = [{ value: this.item.system.resource.value, key: this.item.system.resource.type ?? 'resource', keyIsID: false }];
+                  const resText = typeof formatCost === 'function' ? formatCost(resRaw, this.item) : String(this.item.system.resource.value);
+                  if (resText && showRecall) properties.push({ label: game.i18n.localize("enhancedcombathud-daggerheart.hud.tooltip.recallCost") + ": " + resText, secondary: true });
+                }
+              }
+            } catch (e) {
+              /* ignore recall formatting errors */
+            }
+              // Add domain metadata (domain, level) when present
+              try {
+                if (this.item?.type === 'domainCard') {
+                  const domain = this.item?.system?.domain;
+                  const level = this.item?.system?.level;
+                  if (domain) {
+                    const domainLabel = (typeof domain === 'string' && domain.length)
+                      ? domain
+                          .split(/[-_\s]+/)
+                          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                          .join(' ')
+                      : domain;
+                    if (showDomainMeta) properties.push({ label: `${game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.domain')}: ${domainLabel}`, secondary: true });
+                  }
+                  if (level !== undefined && level !== null && showDomainMeta) properties.push({ label: `${game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.level')}: ${level}`, secondary: true });
+                }
+              } catch (e) {
+                /* ignore */
+              }
+          } catch (e) {
+            console.warn('enhancedcombathud-daggerheart: failed to compute cost for tooltip', e);
+          }
+
+          // Recovery (from action.uses.recovery or item.system.resource.recovery)
+          let recovery = this.action?.uses?.recovery ?? this.action?.recovery ?? this.item?.system?.resource?.recovery ?? null;
+          if (recovery !== null && recovery !== undefined) {
+            // Map recovery tokens to localized labels
+            try {
+              if (typeof recovery === 'string') {
+                const key = `enhancedcombathud-daggerheart.hud.recoveryTypes.${recovery}`;
+                const localized = game.i18n.has(key) ? game.i18n.localize(key) : recovery;
+                recovery = localized;
+              }
+            } catch (e) {
+              /* ignore localization lookup failures */
+            }
+            if (showRecovery) properties.push({ label: game.i18n.localize("enhancedcombathud-daggerheart.hud.tooltip.recovery") + ": " + recovery, secondary: true });
+          }
+
+          // Resources: normalize object/array into a list of strings
+          let resourcesList = [];
+          // Daggerheart often stores resources under item.system.resource (singular) or action.system.resources
+          const rawResources = this.action?.resources ?? this.action?.system?.resources ?? this.item?.system?.resources ?? this.item?.system?.resource ?? null;
+          try {
+            if (Array.isArray(rawResources)) {
+              resourcesList = rawResources.map((r) => (typeof r === 'string' ? r : (r.name ?? JSON.stringify(r))));
+            } else if (rawResources && typeof rawResources === 'object') {
+              // If map-like, build readable entries
+              resourcesList = Object.entries(rawResources).map(([k, v]) => {
+                if (v && typeof v === 'object') return `${k}: ${v.value ?? v.amount ?? v.max ?? v}`;
+                return `${k}: ${v}`;
+              });
+            }
+          } catch (e) {
+            console.warn('enhancedcombathud-daggerheart: failed to parse resources for tooltip', e);
+          }
+
+          try {
+            const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
+            if (dbg) console.info('ECH Tooltip Debug: description sources', { rawDescriptionCandidate, matchedAction, description });
+          } catch (e) {
+            /* ignore */
+          }
+          return { title, description, subtitle, properties, resources: showResourcesSetting ? resourcesList : [], icon, footerText: "" };
+        } catch (err) {
+          console.warn("enhancedcombathud-daggerheart: tooltip build failed", err);
+          return null;
+        }
       }
     }
 
@@ -472,6 +744,12 @@ export function initConfig() {
               case "domainCard":
                 categoryKey = "domain";
                 break;
+              case "class":
+                categoryKey = "class";
+                break;
+              case "subclass":
+                categoryKey = "subclass";
+                break;
               case "ancestry":
               case "community":
                 categoryKey = "heritage";
@@ -591,15 +869,63 @@ export function initConfig() {
       }
     }
 
-    // =============================================================
-    // Register panels with Argon
-    // =============================================================
+  // =============================================================
+  // Register panels with Argon
+  // =============================================================
+  // Argon tooltip for Daggerheart
+    class DaggerheartTooltip extends ARGON.CORE.Tooltip {
+      get classes() {
+        return ["daggerheart-tooltip", ...super.classes];
+      }
+
+      async getTooltipContent(data) {
+        if (!data) return null;
+        const title = data.title || "";
+        const description = data.description || "";
+        const subtitle = data.subtitle ? `<div class=\"subtitle\">${data.subtitle}</div>` : "";
+        const props = data.properties || [];
+        const resources = data.resources || [];
+        const icon = data.icon || "";
+
+        const propHtml = props
+          .map((p) => `<div class=\"ech-tooltip-prop ${p.primary ? 'primary' : 'secondary'}\">${p.label}</div>`)
+          .join("");
+
+        const resourcesHtml = resources.length
+          ? `<div class=\"ech-tooltip-resources\"><strong>${game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.resources')}: </strong>${resources.join(', ')}</div>`
+          : "";
+
+        const iconHtml = icon ? `<img class=\"ech-tooltip-icon\" src=\"${icon}\" alt=\"icon\" />` : "";
+
+        return `
+          <section class=\"card-header description collapsible daggerheart-tooltip-card\">
+            <header class=\"summary\">
+              ${iconHtml}
+              <div class=\"name-stacked border\">
+                <div class=\"name\">${title}</div>
+                ${subtitle}
+              </div>
+              <i class=\"fas fa-chevron-down fa-fw\"></i>
+            </header>
+            <section class=\"details collapsible-content card-content\">
+              <div class=\"wrapper\">
+                <div class=\"description\">${description}</div>
+                <div class=\"properties\">${propHtml}</div>
+                ${resourcesHtml}
+              </div>
+            </section>
+          </section>
+        `;
+      }
+    }
+
     const enableMacroPanel = game.settings.get(MODULE_ID, "macroPanel");
     const mainPanels = [DaggerheartActionPanel];
     if (enableMacroPanel) mainPanels.push(ARGON.PREFAB.MacroPanel);
     mainPanels.push(ARGON.PREFAB.PassTurnPanel);
 
-    CoreHUD.defineSupportedActorTypes(["character", "adversary", "companion"]);
+  CoreHUD.defineTooltip(DaggerheartTooltip);
+  CoreHUD.defineSupportedActorTypes(["character", "adversary", "companion"]);
     CoreHUD.definePortraitPanel(DaggerheartPortraitPanel);
     CoreHUD.defineDrawerPanel(DaggerheartTraitsPanel);
     CoreHUD.defineMainPanels(mainPanels);

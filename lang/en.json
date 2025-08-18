@@ -1,89 +1,136 @@
 {
-    "enhancedcombathud-daggerheart": {
-        "settings": {
-            "switchEquip": {
-                "name": "Auto Equip",
-                "hint": "Automatically equip/unequip items when switching sets"
-            },
-            "showWeaponsItems": {
-                "name": "Show Weapons in 'Use Item' Section",
-                "hint": "Show weapons in the 'Use Item' section. Usefull if your weapon slots are not enough"
-            },
-            "showClassActions": {
-                "name": "Show Class Actions",
-                "hint": "Show class actions in the Main Action bars"
-            },
-            "condenseClassActions": {
-                "name": "Condense Class Actions",
-                "hint": "If 'Show Class Actions' is enabled, condense class actions in pairs to save space"
-            },
-            "noAA": {
-                "name": "Don't Apply Active Effects",
-                "hint": "Don't apply active effects when using special actions. (requires refresh)"
-            },
-            "showSpecialActions": {
-                "name": "Show Basic Actions",
-                "hint": "Show basic actions in the Main Action section. (Dodge, Dash, Disengage, Hide, Ready, Shove)"
-            },
-            "macroPanel": {
-                "name": "Macro Panel",
-                "hint": "Show a macro panel for each character that mirrors the hotbar macros"
-            }
+  "enhancedcombathud-daggerheart": {
+    "settings": {
+      "switchEquip": {
+        "name": "Auto Equip",
+        "hint": "Automatically equip/unequip items when switching sets"
+      },
+      "showWeaponsItems": {
+        "name": "Show Weapons in 'Use Item' Section",
+        "hint": "Show weapons in the 'Use Item' section. Usefull if your weapon slots are not enough"
+      },
+      "showClassActions": {
+        "name": "Show Class Actions",
+        "hint": "Show class actions in the Main Action bars"
+      },
+      "condenseClassActions": {
+        "name": "Condense Class Actions",
+        "hint": "If 'Show Class Actions' is enabled, condense class actions in pairs to save space"
+      },
+      "noAA": {
+        "name": "Don't Apply Active Effects",
+        "hint": "Don't apply active effects when using special actions. (requires refresh)"
+      },
+      "showSpecialActions": {
+        "name": "Show Basic Actions",
+        "hint": "Show basic actions in the Main Action section. (Dodge, Dash, Disengage, Hide, Ready, Shove)"
+      },
+      "macroPanel": {
+        "name": "Macro Panel",
+        "hint": "Show a macro panel for each character that mirrors the hotbar macros"
+      },
+      "showTooltipCost": {
+        "name": "Show Tooltip Cost",
+        "hint": "Display the action/item cost in tooltips."
+      },
+      "showTooltipRecallCost": {
+        "name": "Show Tooltip Recall Cost",
+        "hint": "Display domain card recall cost or resource value as a separate tooltip line."
+      },
+      "showTooltipRecovery": {
+        "name": "Show Tooltip Recovery",
+        "hint": "Display recovery information (Long Rest / Short Rest / Scene) in tooltips."
+      },
+      "showTooltipResources": {
+        "name": "Show Tooltip Resources",
+        "hint": "Display related resources in the tooltip (item or action resources)."
+      },
+      "showDomainMetadata": {
+        "name": "Show Domain Metadata",
+        "hint": "Include domain and level information for domain cards in tooltips."
+      },
+      "includeVaultDomainCards": {
+        "name": "Include Vault Domain Cards",
+        "hint": "Include domain cards marked as 'inVault' in the HUD loadout."
+      },
+      "showPassiveActions": {
+        "name": "Show Passive Actions",
+        "hint": "Toggle the display of passive actions in the HUD."
+      },
+      "debug": {
+        "name": "Debug",
+        "hint": "Enable debug logging for tooltip heuristics and matching."
+      }
+    },
+    "hud": {
+      "mainactions": {
+        "name": "Main Action"
+      },
+      "categories": {
+        "inventory": "Inventory",
+        "domain": "Domains",
+        "class": "Class",
+        "subclass": "Subclass",
+        "heritage": "Heritage",
+        "feature": "Features",
+        "actions": "Actions",
+        "moves": "Moves",
+        "use": "Use",
+        "passive": "Passive"
+      },
+      "traits": {
+        "adversary": "Adversary",
+        "companion": "Companion",
+        "character": "Character - Traits",
+        "trait": "Trait",
+        "value": "Value"
+      },
+      "buttonhud": {
+        "reactionRoll": "Reaction Roll",
+        "attackRoll": "Attack Roll",
+        "longRest": "Long Rest",
+        "shortRest": "Short Rest"
+      },
+      "portrait": {
+        "hp": "HP",
+        "hope": "Hope",
+        "stress": "Stress",
+        "armor": "Armor",
+        "evasion": "Evasion",
+        "difficulty": "Difficulty"
+      },
+      "tooltip": {
+        "cost": "Cost",
+        "recovery": "Recovery",
+        "resources": "Resources",
+        "recallCost": "Recall Cost",
+        "domain": "Domain",
+        "level": "Level"
+      },
+
+      "recoveryTypes": {
+        "longRest": "Long Rest",
+        "shortRest": "Short Rest",
+        "session": "Session",
+        "scene": "Scene"
+      },
+      "items": {
+        "weapon": {
+          "name": "Weapon"
         },
-        "hud": {
-            "mainactions": {
-                "name": "Main Action"
-            },
-            "categories": {
-                "inventory": "Inventory",
-                "domain": "Domains",
-                "class": "Class",
-                "subclass": "Subclass",
-                "heritage": "Heritage",
-                "feature": "Features",
-                "actions": "Actions",
-                "moves": "Moves",
-                "use": "Use",
-                "passive": "Passive"
-            },
-            "traits": {
-                "adversary": "Adversary",
-                "companion": "Companion",
-                "character": "Character - Traits",
-                "trait": "Trait",
-                "value": "Value"
-            },
-            "buttonhud": {
-                "reactionRoll": "Reaction Roll",
-                "attackRoll": "Attack Roll",
-                "longRest": "Long Rest",
-                "shortRest": "Short Rest"
-            },
-            "portrait": {
-                "hp": "HP",
-                "hope": "Hope",
-                "stress": "Stress",
-                "armor": "Armor",
-                "evasion": "Evasion",
-                "difficulty": "Difficulty"
-            },
-            "items": {
-                "weapon": {
-                    "name": "Weapon"
-                },
-                "armor": {
-                    "name": "Armor"
-                },
-                "consumable": {
-                    "name": "Consumable"
-                },
-                "loot": {
-                    "name": "Loot"
-                },
-                "domainCard": {
-                    "name": "Domain Card"
-                }
-            }
+        "armor": {
+          "name": "Armor"
+        },
+        "consumable": {
+          "name": "Consumable"
+        },
+        "loot": {
+          "name": "Loot"
+        },
+        "domainCard": {
+          "name": "Domain Card"
         }
+      }
     }
+  }
 }
