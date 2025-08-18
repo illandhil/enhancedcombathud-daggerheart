@@ -1,3 +1,14 @@
+import { MODULE_ID } from "./main.js";
+
+export function dlog(...args) {
+  try {
+    if (!game.settings.get(MODULE_ID, 'debug')) return;
+    console.debug('enhancedcombathud-daggerheart:DEBUG', ...args);
+  } catch (e) {
+    console.debug('enhancedcombathud-daggerheart:DEBUG error', e);
+  }
+}
+
 export async function rollCharacterTrait(actor, traitKey) {
   if (!actor) {
     ui.notifications.warn("No valid actor provided for the trait roll.");

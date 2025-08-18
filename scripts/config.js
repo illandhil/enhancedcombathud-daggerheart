@@ -1,5 +1,5 @@
 import { MODULE_ID } from "./main.js";
-import { rollCharacterTrait, rollAdversaryReaction, rollCompanionAttack } from "./utils.js";
+import { rollCharacterTrait, rollAdversaryReaction, rollCompanionAttack, dlog } from "./utils.js";
 
 export function initConfig() {
   Hooks.on("argonInit", (CoreHUD) => {
@@ -11,15 +11,7 @@ export function initConfig() {
       );
     }
 
-    // --- Debug helper (master-only) ---
-    function dlog(...args) {
-      try {
-        if (!game.settings.get(MODULE_ID, 'debug')) return;
-        console.debug('enhancedcombathud-daggerheart:DEBUG', ...args);
-      } catch (e) {
-        console.debug('enhancedcombathud-daggerheart:DEBUG error', e);
-      }
-    }
+  // ...using shared dlog from utils.js
 
     // --- Get Argon's Component Classes ---
     const ItemButton = ARGON.MAIN.BUTTONS.ItemButton;
@@ -405,20 +397,11 @@ export function initConfig() {
           const showResourcesSetting = game.settings.get(MODULE_ID, 'showTooltipResources');
           const showDomainMeta = game.settings.get(MODULE_ID, 'showDomainMetadata');
 
-          dlog('debugTooltip', 'getTooltipData candidates', {
-            title,
-            rawDescriptionCandidate,
-            subtitle,
-            showCost,
-            showRecall,
-            showRecovery,
-            showResourcesSetting,
-            showDomainMeta,
-            icon
-          });
-
           // Header icon (prefer item.resource.icon when available)
           const icon = this.action?.img || this.item?.system?.resource?.icon || this.item?.img || "";
+
+          // Debug: show tooltip candidates (icon must be computed first)
+          dlog('getTooltipData candidates', { title, rawDescriptionCandidate, subtitle, showCost, showRecall, showRecovery, showResourcesSetting, showDomainMeta, icon });
 
           // Resolve the action or item cost (array or object)
           try {

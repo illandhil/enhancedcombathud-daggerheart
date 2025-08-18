@@ -105,7 +105,7 @@
       },
       "tooltip": {
         "cost": "Cost",
-  "range": "Range",
+        "range": "Range",
         "recovery": "Recovery",
         "resources": "Resources",
         "recallCost": "Recall Cost",
