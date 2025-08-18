@@ -48,7 +48,7 @@ export function initConfig() {
           dlog('debugCost', 'formatCost array input', rawCost, item);
           return rawCost
             .map((c) => {
-              const value = c?.value ?? c?.amount ?? c?.qty ?? "";
+              let value = c?.value ?? c?.amount ?? c?.qty ?? "";
               const key = c?.key ?? c?.type ?? "";
               const keyIsID = !!c?.keyIsID;
 
@@ -69,9 +69,26 @@ export function initConfig() {
                   if (found) label = found[0].charAt(0).toUpperCase() + found[0].slice(1);
                 }
 
-                // Final fallback: if we still don't have a friendly label, mark it as 'Special'.
-                if ((!label || label === key) && item.system?.resource) {
-                  label = 'Special';
+                // If still unresolved, check known ability/resource keys; otherwise classify
+                // as 'Special' (no value) so we display a clean fallback.
+                const abilityCosts = {
+                  hitPoints: { id: 'hitPoints', label: 'DAGGERHEART.CONFIG.HealingType.hitPoints.name', group: 'Global' },
+                  stress: { id: 'stress', label: 'DAGGERHEART.CONFIG.HealingType.stress.name', group: 'Global' },
+                  hope: { id: 'hope', label: 'Hope', group: 'TYPES.Actor.character' },
+                  armor: { id: 'armor', label: 'Armor Slot', group: 'TYPES.Actor.character' },
+                  fear: { id: 'fear', label: 'Fear', group: 'TYPES.Actor.adversary' }
+                };
+
+                if ((!label || label === key)) {
+                  if (abilityCosts.hasOwnProperty(key)) {
+                    const candidateLabel = abilityCosts[key].label;
+                    // Localize if possible
+                    label = (game?.i18n && game.i18n.has && game.i18n.has(candidateLabel)) ? game.i18n.localize(candidateLabel) : candidateLabel;
+                  } else {
+                    // Unknown key -> classify as Special and don't show a numeric value
+                    label = 'Special';
+                    value = "";
+                  }
                 }
               }
 
