@@ -798,8 +798,7 @@ export function initConfig() {
             ),
           };
 
-          // temporary collection for subclass items so we can order them by featureState
-          const subclassQueue = [];
+          // Subclass items will be added directly; the category panel sorts by featureType.
 
           for (const item of actor.items) {
             let categoryKey = "feature";
@@ -914,27 +913,17 @@ export function initConfig() {
               }
 
               if (categoryKey === 'subclass') {
-                // resolvedFeatureType was set during the subclass filter; if unset, leave null
-                subclassQueue.push({ item, actions: itemActions, featureType: resolvedFeatureType });
+                // resolvedFeatureType was set during the subclass filter; pass it through so
+                // the panel's sort function can order foundation/specialization/mastery.
+                addButtonsToCategory(categories, 'subclass', item, itemActions, { featureType: resolvedFeatureType });
               } else {
                 addButtonsToCategory(categories, categoryKey, item, itemActions);
               }
             }
           }
 
-          // After collecting all items, add subclass items in order: foundation -> specialization -> mastery
-          if (subclassQueue.length > 0) {
-            const orderMap = { foundation: 0, specialization: 1, mastery: 2 };
-            subclassQueue.sort((a, b) => {
-              const oa = orderMap[a.featureType] ?? 0;
-              const ob = orderMap[b.featureType] ?? 0;
-              if (oa !== ob) return oa - ob;
-              return (a.item.name || '').localeCompare(b.item.name || '');
-            });
-            for (const entry of subclassQueue) {
-              addButtonsToCategory(categories, 'subclass', entry.item, entry.actions, { featureType: entry.featureType });
-            }
-          }
+          // Subclass items were already added above with featureType metadata; the
+          // category panel will sort them when building the UI.
 
           for (const key of categoryOrder) {
             if (
