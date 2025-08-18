@@ -1084,5 +1084,62 @@ export function initConfig() {
     CoreHUD.defineWeaponSets(DummyComponent);
     CoreHUD.defineMovementHud(null);
     CoreHUD.defineButtonHud(DaggerheartButtonHud);
+
+  // Delegate measured-template-button clicks so tooltip buttons trigger a template preview.
+  // Uses CONFIG.ux.TemplateManager.createPreview if available, otherwise falls back to
+  // calling Foundry's canvas.templates._createPreview. This keeps tooltip markup simple
+  // while ensuring clicks work even when the enricher attachment step wasn't run.
+  document.body.addEventListener("click", async (event) => {
+    try {
+      const btn = event.target.closest && event.target.closest('.measured-template-button');
+      if (!btn) return;
+      // Only respond to primary button clicks
+      if (event.button && event.button !== 0) return;
+      event.preventDefault();
+
+      const type = btn.dataset.type;
+      const range = btn.dataset.range;
+      if (!type || !range) return;
+
+      // Map 'inFront'/'emanation' semantics used by Daggerheart -> Foundry template types
+      const usedType = type === 'inFront' ? 'cone' : type === 'emanation' ? 'circle' : type;
+
+      let angle;
+      if (usedType === 'cone') angle = CONFIG?.MeasuredTemplate?.defaults?.angle ?? 60;
+      else if (type === 'inFront') angle = 180;
+
+      // Determine distance using Daggerheart settings when available; fallback to 5
+      let baseDistance = 5;
+      try {
+        const vr = game.settings.get(CONFIG.DH.id, CONFIG.DH.SETTINGS.gameSettings.variantRules);
+        baseDistance = vr?.rangeMeasurement?.[range] ?? baseDistance;
+      } catch (e) {
+        // ignore and keep fallback
+      }
+
+      const distance = type === 'emanation' ? baseDistance + 2.5 : baseDistance;
+
+      const { width: sceneW = 0, height: sceneH = 0 } = game.canvas?.scene?.dimensions ?? {};
+      const data = {
+        x: sceneW / 2,
+        y: sceneH / 2,
+        t: usedType,
+        distance,
+        width: usedType === 'ray' ? 5 : undefined,
+        angle
+      };
+
+      // Prefer system's TemplateManager if present (keeps existing UX behavior), else use Foundry preview
+      if (CONFIG?.ux?.TemplateManager && typeof CONFIG.ux.TemplateManager.createPreview === 'function') {
+        CONFIG.ux.TemplateManager.createPreview(data);
+      } else if (game.canvas && game.canvas.templates && typeof game.canvas.templates._createPreview === 'function') {
+        await game.canvas.templates._createPreview(data, { renderSheet: false });
+      } else {
+        ui.notifications.warn(game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.noScene'));
+      }
+    } catch (err) {
+      console.warn('enhancedcombathud-daggerheart: measured-template click handler failed', err);
+    }
+  });
   });
 }
