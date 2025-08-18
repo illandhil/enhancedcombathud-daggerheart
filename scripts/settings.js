@@ -38,6 +38,15 @@ export function registerSettings() {
             default: true,
             onChange: () => ui.ARGON?.refresh(),
         },
+        showTooltipRange: {
+            name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipRange.name"),
+            hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showTooltipRange.hint"),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: true,
+            onChange: () => ui.ARGON?.refresh(),
+        },
         showDomainMetadata: {
             name: game.i18n.localize("enhancedcombathud-daggerheart.settings.showDomainMetadata.name"),
             hint: game.i18n.localize("enhancedcombathud-daggerheart.settings.showDomainMetadata.hint"),

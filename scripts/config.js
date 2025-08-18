@@ -573,6 +573,41 @@ export function initConfig() {
             console.warn('enhancedcombathud-daggerheart: failed to parse resources for tooltip', e);
           }
 
+          // Range: prefer action-level, matched action, then item-level fields.
+          try {
+            const _rangeFrom = (a) => {
+              try {
+                if (!a) return null;
+                return a?.range ?? a?.attack?.range ?? a?.system?.range ?? a?.system?.attack?.range ?? null;
+              } catch (e) { return null; }
+            };
+            const matched = (typeof matchedAction !== 'undefined') ? matchedAction : null;
+            let rangeVal = _rangeFrom(this.action) ?? _rangeFrom(matched) ?? this.item?.system?.range ?? this.item?.system?.attack?.range ?? null;
+            // If still not found, scan item.system.actions for any action that defines a range
+            if (!rangeVal && this.item?.system?.actions) {
+              try {
+                const actionsObj = this.item.system.actions;
+                const values = actionsObj instanceof Map ? Array.from(actionsObj.values()) : Object.values(actionsObj || {});
+                const found = values.find(v => _rangeFrom(v));
+                if (found) rangeVal = _rangeFrom(found);
+              } catch (e) {}
+            }
+
+            const showRange = game.settings.get(MODULE_ID, 'showTooltipRange');
+            if (rangeVal && showRange) {
+              let rangeLabel = rangeVal;
+              try {
+                const shortKey = `DAGGERHEART.CONFIG.Range.${rangeVal}.short`;
+                const nameKey = `DAGGERHEART.CONFIG.Range.${rangeVal}.name`;
+                if (game.i18n.has && game.i18n.has(shortKey)) rangeLabel = game.i18n.localize(shortKey);
+                else if (game.i18n.has && game.i18n.has(nameKey)) rangeLabel = game.i18n.localize(nameKey);
+              } catch (e) {}
+              properties.push({ label: game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.range') + ": " + rangeLabel, secondary: true });
+            }
+          } catch (e) {
+            /* ignore range errors */
+          }
+
           try {
             const dbg = (typeof window !== 'undefined' && window.__ECH_DEBUG) || (game?.settings ? game.settings.get(MODULE_ID, 'debug') : false);
             if (dbg) console.info('ECH Tooltip Debug: description sources', { rawDescriptionCandidate, matchedAction, description });

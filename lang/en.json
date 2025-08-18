@@ -45,6 +45,10 @@
         "name": "Show Tooltip Resources",
         "hint": "Display related resources in the tooltip (item or action resources)."
       },
+      "showTooltipRange": {
+        "name": "Show Tooltip Range",
+        "hint": "Display action/attack range in tooltips."
+      },
       "showDomainMetadata": {
         "name": "Show Domain Metadata",
         "hint": "Include domain and level information for domain cards in tooltips."
@@ -101,6 +105,7 @@
       },
       "tooltip": {
         "cost": "Cost",
+  "range": "Range",
         "recovery": "Recovery",
         "resources": "Resources",
         "recallCost": "Recall Cost",
