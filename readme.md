@@ -36,10 +36,6 @@ Or manually:
 ## TO DO
 Other  
 
-## Usage
-
-Once enabled, the enhanced HUD will automatically appear during combat encounters in Daggerheart games.
-
 ## Contributing
 
 Pull requests and suggestions are welcome!
