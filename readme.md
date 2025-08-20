@@ -44,6 +44,4 @@ Once enabled, the enhanced HUD will automatically appear during combat encounter
 
 Pull requests and suggestions are welcome!
 
-## License
-
-See `LICENSE` file for details.
+<img width="1149" height="439" alt="ech-daggerheart" src="https://github.com/user-attachments/assets/36cf38b7-1757-4cbf-bf31-a439864a055c" />
