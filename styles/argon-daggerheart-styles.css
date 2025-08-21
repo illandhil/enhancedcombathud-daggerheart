@@ -19,7 +19,7 @@
 .extended-combat-hud .portrait-hud {
   align-items: flex-end;
   display: flex;
-  flex-direction: horizontal;
+  flex-direction: row;
   justify-content: center;
   min-width: 405px;
 }

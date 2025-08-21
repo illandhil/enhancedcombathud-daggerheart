@@ -269,6 +269,63 @@ export function initConfig() {
           if (stress) pushStatBlock(statBlocks, "enhancedcombathud-daggerheart.hud.portrait.stress", "stress", stress.value, stress.max);
           if (armor?.max > 0) pushStatBlock(statBlocks, "enhancedcombathud-daggerheart.hud.portrait.armor", "armor", armor.value, armor.max);
           if (evasion) pushStatBlock(statBlocks, "enhancedcombathud-daggerheart.hud.portrait.evasion", "evasion", evasion);
+          // Damage thresholds: use armor.baseThresholds when armor is equipped, else thresholds equal actor level
+          try {
+            const actorLevel = Number(actor.system?.levelData?.level?.current ?? 0);
+
+            // Gather equipped armor items to inspect their baseThresholds
+            const equippedArmors = (actor.items || []).filter(i => i.type === 'armor' && i.system?.equipped);
+
+            // Determine best (highest) baseThresholds among equipped armors, if any
+            let armorMajorBase = 0;
+            let armorSevereBase = 0;
+            for (const a of equippedArmors) {
+              try {
+                const bt = a.system?.baseThresholds ?? {};
+                const maj = Number(bt.major ?? 0);
+                const sev = Number(bt.severe ?? 0);
+                if (maj > armorMajorBase) armorMajorBase = maj;
+                if (sev > armorSevereBase) armorSevereBase = sev;
+              } catch (e) { /* ignore malformed armor entries */ }
+            }
+
+            // Also accept actor-level stored damage thresholds if present (defensive: different casings)
+            try {
+              const actorDT = actor.system?.damageThresholds ?? actor.system?.damagethresholds ?? {};
+              const actorMaj = Number(actorDT?.major ?? 0);
+              const actorSev = Number(actorDT?.severe ?? 0);
+              if (actorMaj > armorMajorBase) armorMajorBase = actorMaj;
+              if (actorSev > armorSevereBase) armorSevereBase = actorSev;
+            } catch (e) {
+              /* ignore actor damage threshold parsing errors */
+            }
+
+            // Define major and minor thresholds based on armor and level or set to level and level x 2
+            const majorThreshold = (armorMajorBase > 0) ? (armorMajorBase) : actorLevel;
+            const severeThreshold = (armorSevereBase > 0) ? (armorSevereBase) : (actorLevel * 2);
+
+            // Render as three labels but only two numeric thresholds:
+              // Compose a single stat row: "Minor <major>  Major <severe>  Severe"
+              try {
+                const minorLabel = game.i18n.localize('enhancedcombathud-daggerheart.hud.portrait.damageThreshold.minor');
+                const majorLabel = game.i18n.localize('enhancedcombathud-daggerheart.hud.portrait.damageThreshold.major');
+                const severeLabel = game.i18n.localize('enhancedcombathud-daggerheart.hud.portrait.damageThreshold.severe');
+
+                const majorVal = majorThreshold > 0 ? String(majorThreshold) : '-';
+                const severeVal = severeThreshold > 0 ? String(severeThreshold) : '-';
+
+                // End with the 'Severe' label
+                const composed = `${minorLabel} ${majorVal}  ${majorLabel} ${severeVal}  ${severeLabel}`;
+                //pushStatBlock(statBlocks, 'enhancedcombathud-daggerheart.hud.portrait.damageThreshold.label', 'damage-threshold-composed', composed);
+                pushStatBlock(statBlocks, 'enhancedcombathud-daggerheart.hud.portrait.damageThreshold.major', 'damage-threshold-major', majorVal);
+                pushStatBlock(statBlocks, 'enhancedcombathud-daggerheart.hud.portrait.damageThreshold.severe', 'damage-threshold-severe', severeVal);
+              } catch (e) {
+                // If composition fails, do not push a fallback stat; log for debugging
+                dlog('warn', 'failed to compose damage threshold stat row', e);
+              }
+          } catch (e) {
+            dlog('warn', 'damage threshold computation failed', e);
+          }
         } else if (actor.type === "adversary") {
           const hp = system.resources?.hitPoints;
           const stress = system.resources?.stress;

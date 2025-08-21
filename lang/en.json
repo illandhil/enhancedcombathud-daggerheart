@@ -104,6 +104,12 @@
         "hope": "Hope",
         "stress": "Stress",
         "armor": "Armor",
+        "damageThreshold": {
+          "minor": "Minor",
+          "major": "Major",
+          "severe": "Severe",
+          "label": "Damage Thresholds"
+        },
         "evasion": "Evasion",
         "difficulty": "Difficulty"
       },
