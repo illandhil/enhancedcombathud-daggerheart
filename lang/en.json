@@ -65,6 +65,10 @@
         "name": "Show Passive Actions",
         "hint": "Toggle the display of passive actions in the HUD that do not have a clickable ability, but have tooltips."
       },
+      "passiveClickToChat": {
+        "name": "Send Passive Actions to Chat on Click",
+        "hint": "When enabled, clicking a passive action will post its name and description to the chat instead of doing nothing."
+      },
       "debug": {
         "name": "Debug",
         "hint": "Enable debug logging for tooltip heuristics and matching."

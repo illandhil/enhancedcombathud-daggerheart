@@ -473,6 +473,40 @@ export function initConfig() {
         return this.action.img || this.item.img;
       }
       async _onLeftClick(event) {
+        // If this is a passive action, post its name/description to chat instead of attempting to 'use' it.
+        if (this.action && this.action.actionType === "passive") {
+          try {
+            event?.preventDefault();
+            const title = this.label || (this.item && this.item.name) || "";
+            let rawDescription = this.action?.description || this.action?.system?.description || this.item?.system?.description || "";
+            let description = "";
+            try {
+              description = rawDescription ? await TextEditor.enrichHTML(rawDescription, { async: true, relativeTo: this.item }) : "";
+            } catch (e) {
+              description = rawDescription || "";
+            }
+
+            const content = `<div class=\"ech-passive-action\"><strong>${title}</strong>${description ? `<div class=\"ech-passive-desc\">${description}</div>` : ""}</div>`;
+
+            // Determine speaker (prefer item.parent actor when available)
+            let speaker = ChatMessage.getSpeaker();
+            try {
+              const parent = this.item?.parent || this.item?.actor || null;
+              if (parent) {
+                // When parent is an Actor instance
+                if (parent?.id || parent?._id) speaker = { actor: parent.id ?? parent._id, alias: parent.name, actorUUID: parent.uuid };
+              }
+            } catch (e) {
+              // fallback to default speaker
+            }
+
+            ChatMessage.create({ content, speaker });
+            return;
+          } catch (err) {
+            console.warn('enhancedcombathud-daggerheart: failed to post passive action to chat', err);
+          }
+        }
+
         if (this.item && typeof this.item.use === "function") this.item.use(event);
         else ui.notifications.warn(`Action for '${this.label}' is not usable.`);
       }

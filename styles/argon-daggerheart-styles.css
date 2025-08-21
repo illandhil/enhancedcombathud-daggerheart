@@ -116,16 +116,15 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  font-size: 0.90rem;
+  font-size: 0.95rem;
 }
 
 .extended-combat-hud .portrait-hud .dt-stat-blocks .dt-title {
-  font-size: 0.95rem;
+  font-size: 1.0rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #6e6e6e;
   opacity: 0.95;
   margin-bottom: 4px;
-  text-transform: uppercase;
   letter-spacing: 0.6px;
 }
 
@@ -135,7 +134,7 @@
 }
 
 .extended-combat-hud .portrait-hud .dt-stat-blocks .portrait-stat-value {
-  color: #ffcc00;
+  color: #ffd900;
   font-weight: 700;
   text-shadow: 0 0 4px #000;
 }
