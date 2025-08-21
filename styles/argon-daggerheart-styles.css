@@ -97,6 +97,49 @@
   gap: 4px;
 }
 
+/* Damage Thresholds (separate container positioned top-right of portrait) */
+.extended-combat-hud .portrait-hud .dt-stat-blocks {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(0,0,0,0.25);
+  padding: 6px 8px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+  z-index: 30;
+}
+
+.extended-combat-hud .portrait-hud .dt-stat-blocks .dt-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.90rem;
+}
+
+.extended-combat-hud .portrait-hud .dt-stat-blocks .dt-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0.95;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.extended-combat-hud .portrait-hud .dt-stat-blocks .portrait-stat-label {
+  color: #cfcfcf;
+  opacity: 0.95;
+}
+
+.extended-combat-hud .portrait-hud .dt-stat-blocks .portrait-stat-value {
+  color: #ffcc00;
+  font-weight: 700;
+  text-shadow: 0 0 4px #000;
+}
+
 /* Style for HP */
 .extended-combat-hud .portrait-hud .portrait-stat-block #hp-value {
   color: #00ff6e; /* SeaGreen */

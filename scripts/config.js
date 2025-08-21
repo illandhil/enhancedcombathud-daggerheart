@@ -316,9 +316,11 @@ export function initConfig() {
 
                 // End with the 'Severe' label
                 const composed = `${minorLabel} ${majorVal}  ${majorLabel} ${severeVal}  ${severeLabel}`;
-                //pushStatBlock(statBlocks, 'enhancedcombathud-daggerheart.hud.portrait.damageThreshold.label', 'damage-threshold-composed', composed);
-                pushStatBlock(statBlocks, 'enhancedcombathud-daggerheart.hud.portrait.damageThreshold.major', 'damage-threshold-major', majorVal);
-                pushStatBlock(statBlocks, 'enhancedcombathud-daggerheart.hud.portrait.damageThreshold.severe', 'damage-threshold-severe', severeVal);
+                // Damage thresholds are rendered separately in a DT container so they can be
+                // positioned independently of other stat blocks. Store them on a separate
+                // array returned by getDTStatBlocks().
+                // We'll push into a dtBlocks array via the new helper in getDTStatBlocks().
+                // (no-op here)
               } catch (e) {
                 // If composition fails, do not push a fallback stat; log for debugging
                 dlog('warn', 'failed to compose damage threshold stat row', e);
@@ -341,6 +343,113 @@ export function initConfig() {
         }
 
         return statBlocks;
+      }
+
+      // Build a separate set of stat rows containing only Damage Threshold values
+      // so they can be positioned independently in the portrait.
+      async getDTStatBlocks() {
+        const actor = this.actor;
+        const dtBlocks = [];
+        if (!actor || actor.type === 'environment') return dtBlocks;
+
+        try {
+          const actorLevel = Number(actor.system?.levelData?.level?.current ?? 0);
+
+          // Gather equipped armor items to inspect their baseThresholds
+          const equippedArmors = (actor.items || []).filter(i => i.type === 'armor' && i.system?.equipped);
+
+          // Determine best (highest) baseThresholds among equipped armors, if any
+          let armorMajorBase = 0;
+          let armorSevereBase = 0;
+          for (const a of equippedArmors) {
+            try {
+              const bt = a.system?.baseThresholds ?? {};
+              const maj = Number(bt.major ?? 0);
+              const sev = Number(bt.severe ?? 0);
+              if (maj > armorMajorBase) armorMajorBase = maj;
+              if (sev > armorSevereBase) armorSevereBase = sev;
+            } catch (e) { /* ignore malformed armor entries */ }
+          }
+
+          // Also accept actor-level stored damage thresholds if present (defensive: different casings)
+          try {
+            const actorDT = actor.system?.damageThresholds ?? actor.system?.damagethresholds ?? {};
+            const actorMaj = Number(actorDT?.major ?? 0);
+            const actorSev = Number(actorDT?.severe ?? 0);
+            if (actorMaj > armorMajorBase) armorMajorBase = actorMaj;
+            if (actorSev > armorSevereBase) armorSevereBase = actorSev;
+          } catch (e) { /* ignore actor damage threshold parsing errors */ }
+
+          const majorThreshold = (armorMajorBase > 0) ? (armorMajorBase) : actorLevel;
+          const severeThreshold = (armorSevereBase > 0) ? (armorSevereBase) : (actorLevel * 2);
+
+          const majorVal = majorThreshold > 0 ? String(majorThreshold) : '-';
+          const severeVal = severeThreshold > 0 ? String(severeThreshold) : '-';
+
+          // Push rows as [labelObj, valueObj] matching the shape used by pushStatBlock.
+          dtBlocks.push([
+            { text: game.i18n.localize('enhancedcombathud-daggerheart.hud.portrait.damageThreshold.major'), id: 'damage-threshold-major-label' },
+            { text: majorVal, id: 'damage-threshold-major' },
+          ]);
+          dtBlocks.push([
+            { text: game.i18n.localize('enhancedcombathud-daggerheart.hud.portrait.damageThreshold.severe'), id: 'damage-threshold-severe-label' },
+            { text: severeVal, id: 'damage-threshold-severe' },
+          ]);
+        } catch (e) {
+          dlog('warn', 'damage threshold computation failed', e);
+        }
+
+        return dtBlocks;
+      }
+
+      // Override render to insert a dedicated DT stat container that we position at
+      // the top-right of the portrait. This keeps the core statBlocks rendering
+      // intact while allowing independent placement for damage thresholds.
+      async render() {
+        const el = await super.render();
+        try {
+          // Remove any existing DT container (re-render safety)
+          const existing = el.querySelector('.dt-stat-blocks');
+          if (existing) existing.remove();
+
+          const dtBlocks = await this.getDTStatBlocks();
+          if (dtBlocks.length === 0) return el;
+
+          const container = document.createElement('div');
+          container.classList.add('portrait-stat-block', 'dt-stat-blocks');
+
+          // Add localized title for Damage Thresholds
+          const titleEl = document.createElement('div');
+          titleEl.classList.add('dt-title');
+          titleEl.textContent = game.i18n.localize('enhancedcombathud-daggerheart.hud.portrait.damageThreshold.label');
+          container.appendChild(titleEl);
+
+          for (const row of dtBlocks) {
+            const rowEl = document.createElement('div');
+            rowEl.classList.add('portrait-stat-row', 'dt-row');
+
+            const labelSpan = document.createElement('span');
+            labelSpan.classList.add('portrait-stat-label');
+            labelSpan.textContent = row[0]?.text || '';
+
+            const valueSpan = document.createElement('span');
+            valueSpan.classList.add('portrait-stat-value');
+            if (row[1]?.id) valueSpan.id = row[1].id;
+            valueSpan.textContent = row[1]?.text || '';
+
+            rowEl.appendChild(labelSpan);
+            rowEl.appendChild(valueSpan);
+            container.appendChild(rowEl);
+          }
+
+          // Ensure portrait container is positioned relative so absolute placement works.
+          const portraitHud = el.querySelector('.portrait-hud') || el;
+          portraitHud.style.position = portraitHud.style.position || 'relative';
+          portraitHud.appendChild(container);
+        } catch (e) {
+          dlog('warn', 'DT render failed', e);
+        }
+        return el;
       }
     }
 

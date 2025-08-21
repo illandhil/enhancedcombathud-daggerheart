@@ -108,7 +108,7 @@
           "minor": "Minor",
           "major": "Major",
           "severe": "Severe",
-          "label": "Damage Thresholds"
+          "label": "Thresholds"
         },
         "evasion": "Evasion",
         "difficulty": "Difficulty"
