@@ -40,4 +40,5 @@ Other
 
 Pull requests and suggestions are welcome!
 
-<img width="1149" height="439" alt="ech-daggerheart" src="https://github.com/user-attachments/assets/36cf38b7-1757-4cbf-bf31-a439864a055c" />
+<img width="1103" height="308" alt="ech-daggerheart" src="https://github.com/user-attachments/assets/0d9e704c-99f3-41de-9447-d4257e1108c4" />
+
