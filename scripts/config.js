@@ -981,8 +981,19 @@ export function initConfig() {
               let resolvedFeatureType = null;
               if (categoryKey === 'subclass') {
                 try {
-                  // Determine currently active subclass (class or multiclass)
-                  const activeSubclass = (actor.system.class?.subclass) || (actor.system.multiclass?.subclass) || null;
+                  // Determine currently active subclass (class or multiclass).
+                  // The system may store an embedded subclass object on actor.system.class.subclass
+                  // or the subclass may exist as an Item inside actor.items (common in exported actors).
+                  let activeSubclass = (actor.system.class?.subclass) || (actor.system.multiclass?.subclass) || null;
+                  if (!activeSubclass) {
+                    // Fallback: try to find a subclass item on the actor itself.
+                    try {
+                      const candidate = (actor.items || []).find(i => i?.type === 'subclass' && (Array.isArray(i.system?.features) || i.system?.featureState !== undefined));
+                      if (candidate) activeSubclass = candidate;
+                    } catch (e) {
+                      /* ignore scanning errors */
+                    }
+                  }
                   if (!activeSubclass) continue;
 
                   // Normalize subclassState: boolean true => 2 (foundation + specialization)
@@ -1005,29 +1016,40 @@ export function initConfig() {
                     return false;
                   });
 
-                  const featureType = matches?.type ?? null;
+                  let featureType = matches?.type ?? null;
 
                   // Allowed types are cumulative: foundation always; specialization if state>=2; mastery if state>=3
                   const allowed = new Set(['foundation']);
                   if (subclassState >= 2) allowed.add('specialization');
                   if (subclassState >= 3) allowed.add('mastery');
 
+                  // If we couldn't find a mapping in the subclass.features array, some data
+                  // exports store the feature type on the item itself (system.identifier).
+                  if (!featureType) {
+                    try {
+                      const id = item.system?.identifier ?? item.system?.identifier ?? item.identifier ?? null;
+                      if (id && typeof id === 'string') {
+                        const normalized = id.toLowerCase();
+                        if (['foundation', 'specialization', 'mastery'].includes(normalized)) featureType = normalized;
+                      }
+                    } catch (e) {
+                      // ignore
+                    }
+                  }
+
                   if (featureType) {
+                    // If the featureType is known but not allowed by the current subclassState, skip it
                     if (!allowed.has(featureType)) continue;
                     resolvedFeatureType = featureType;
                   } else {
-                    // If we couldn't map this item in the subclass features list, be permissive for
-                    // foundation+specialization when subclassState >=2 (so boolean true works), but
-                    // require subclassState>=3 for suspected mastery items (heuristic).
+                    // Heuristic fallback: if the item name suggests mastery and state is too low, skip it
                     const lower = (item.name || '').toLowerCase();
-                    if (lower.includes('master') || lower.includes('mastery')) {
-                      if (subclassState < 3) continue;
-                      resolvedFeatureType = 'mastery';
-                    } else if (subclassState < 2) {
-                      // only foundation is allowed and we can't confirm, so include only if we assume foundation
-                      // (we'll allow it by default here)
-                      resolvedFeatureType = 'foundation';
-                    }
+                    if ((lower.includes('master') || lower.includes('mastery')) && subclassState < 3) continue;
+
+                    // If subclassState < 2 we only include foundation-level items by default
+                    if (subclassState < 2) resolvedFeatureType = 'foundation';
+
+                    // Final safety: default to foundation if we still don't have a resolved type
                     if (!resolvedFeatureType) resolvedFeatureType = 'foundation';
                   }
                 } catch (e) {
