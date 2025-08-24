@@ -29,7 +29,7 @@
         "id": "daggerheart",
         "type": "system",
         "compatibility": {
-          "minimum": "1.0.5"
+          "minimum": "1.1.0"
         }
       }
     ],
