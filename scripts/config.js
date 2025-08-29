@@ -1241,6 +1241,8 @@ export function initConfig() {
     try {
       const btn = event.target.closest && event.target.closest('.measured-template-button');
       if (!btn) return;
+    // Restrict to buttons inside Argon tooltip section
+    if (!btn.closest('.daggerheart-tooltip')) return;
       // Only respond to primary button clicks
       if (event.button && event.button !== 0) return;
       event.preventDefault();
