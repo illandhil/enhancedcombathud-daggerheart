@@ -1117,16 +1117,53 @@ export function initConfig() {
           // Actor-level attack (top-level system.attack)
           if (actor.system.attack) {
             const attackData = actor.system.attack;
+            // Mark passive if not defined
             if (!attackData.actionType) attackData.actionType = "passive";
-            const itemData = {
-              name: attackData.name,
-              img: attackData.img,
-              type: "feature",
+
+    /**
+     * Lightweight proxy for an actor-level attack.
+     * This is intentionally not a Foundry Item. It exposes a minimal
+     * `use(event)` API so the HUD can invoke the system attack path
+     * without creating a temporary Item. This keeps behavior local to
+     * the HUD module and avoids side-effects in the core system.
+     */
+    const proxy = {
+              name: attackData.name || "Attack",
+              img: attackData.img || "icons/svg/sword.svg",
+              type: attackData.type || "attack",
               system: { actions: { [attackData._id]: attackData } },
+              parent: actor,
+              // Provide a use() method that delegates to the attack data's use if present,
+              // otherwise call actor.diceRoll with the attack payload so the system handles the roll.
+              async use(event) {
+                try {
+                  if (attackData && typeof attackData.use === "function") {
+                    return await attackData.use(event);
+                  }
+                } catch (e) {
+      dlog('attackProxy', 'attackData.use threw', e);
+                }
+
+                // Fallback: construct a diceRoll config that mirrors how the system expects an attack.
+                try {
+                  const rollPayload = attackData.roll ?? attackData;
+                  const cfg = {
+                    event: event ?? {},
+                    title: `${attackData.name ?? 'Attack'}: ${actor.name}`,
+                    headerTitle: attackData.name ?? 'Attack',
+                    roll: rollPayload,
+                    hasRoll: true,
+                  };
+                  return await actor.diceRoll(cfg);
+                } catch (err) {
+      dlog('attackProxy', 'proxy attack use fallback failed', err);
+                  return null;
+                }
+              }
             };
-            const tempItem = new Item.implementation(itemData, { parent: actor });
-            tempItem.isProxy = true;
-            addButtonsToCategory(categories, "actions", tempItem, [attackData]);
+
+            // Add the proxy to the actions list so the HUD button shows up and will call proxy.use()
+            addButtonsToCategory(categories, "actions", proxy, [attackData]);
           }
 
           // Feature items
@@ -1239,13 +1276,25 @@ export function initConfig() {
   // while ensuring clicks work even when the enricher attachment step wasn't run.
   document.body.addEventListener("click", async (event) => {
     try {
+      // Fast path: only handle clicks originating from our measured-template buttons
       const btn = event.target.closest && event.target.closest('.measured-template-button');
       if (!btn) return;
-    // Restrict to buttons inside Argon tooltip section
-    if (!btn.closest('.daggerheart-tooltip')) return;
-      // Only respond to primary button clicks
-      if (event.button && event.button !== 0) return;
-      event.preventDefault();
+
+      // Temp debug: log arrival of clicks on measured-template buttons
+      try {
+        const t = btn.dataset?.type ?? null;
+        const r = btn.dataset?.range ?? null;
+        console.info('ECH: measured-template click', { type: t, range: r, insideTooltip: !!btn.closest('.daggerheart-tooltip') });
+        dlog('template', 'measured-template click', { type: t, range: r });
+      } catch (e) {
+        console.info('ECH: measured-template click (log failed)', e);
+      }
+
+  // Restrict to buttons inside Argon tooltip section
+  if (!btn.closest('.daggerheart-tooltip')) return;
+
+  // Only respond to primary button clicks
+  if (event.button && event.button !== 0) return;
 
       const type = btn.dataset.type;
       const range = btn.dataset.range;
@@ -1279,14 +1328,83 @@ export function initConfig() {
         angle
       };
 
-      // Prefer system's TemplateManager if present (keeps existing UX behavior), else use Foundry preview
-      if (CONFIG?.ux?.TemplateManager && typeof CONFIG.ux.TemplateManager.createPreview === 'function') {
-        CONFIG.ux.TemplateManager.createPreview(data);
-      } else if (game.canvas && game.canvas.templates && typeof game.canvas.templates._createPreview === 'function') {
-        await game.canvas.templates._createPreview(data, { renderSheet: false });
-      } else {
-        ui.notifications.warn(game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.noScene'));
-      }
+      // Defer creating a preview so the system's own click handler can run first.
+      // If the system created a preview, we do nothing. If not, we create one.
+    setTimeout(async () => {
+        try {
+      console.info('ECH: deferred preview check starting', { time: Date.now() });
+      dlog('template', 'deferred preview check starting');
+      let previewActive = false;
+          try {
+            // Prefer an explicit API if available
+            if (CONFIG?.ux?.TemplateManager && typeof CONFIG.ux.TemplateManager.isPreviewActive === 'function') {
+              previewActive = !!CONFIG.ux.TemplateManager.isPreviewActive();
+            } else if (CONFIG?.ux?.TemplateManager && CONFIG.ux.TemplateManager.preview) {
+              // Some TemplateManager implementations expose a `preview` property when active
+              previewActive = !!CONFIG.ux.TemplateManager.preview;
+            } else if (game.canvas && game.canvas.templates) {
+              // Foundry's canvas.templates.preview is commonly set when a preview exists
+              previewActive = !!game.canvas.templates.preview;
+            }
+          } catch (e) {
+            previewActive = false;
+          }
+
+          if (previewActive) {
+            // Do a secondary visual check: some TemplateManager implementations
+            // set a preview object truthy but don't actually render it. If no DOM
+            // preview appears within a short window, we should create our own.
+            const hasVisiblePreview = () => {
+              try {
+                // Look for common preview DOM nodes under the canvas board
+                const board = document.getElementById('board');
+                if (!board) return false;
+                return !!board.querySelector('.measured-template, .template, .template-preview, svg .measured-template');
+              } catch (e) {
+                return false;
+              }
+            };
+
+            if (hasVisiblePreview()) {
+              console.info('ECH: preview already active and visible, skipping createPreview', { previewActive });
+              dlog('template', 'skip createPreview: preview already active and visible', { previewActive });
+              return;
+            }
+
+            // Wait a short moment to allow any async render to appear, then re-check.
+            await (new Promise((res) => setTimeout(res, 60)));
+            if (hasVisiblePreview()) {
+              console.info('ECH: preview became visible after short wait, skipping createPreview');
+              dlog('template', 'skip createPreview: preview became visible after short wait');
+              return;
+            }
+
+            console.info('ECH: preview reported active but no visible preview found; proceeding to create one', { previewActive });
+            dlog('template', 'reported previewActive but no visible preview, creating fallback');
+            // fall through to create our own preview
+          }
+
+          // We're about to create our own preview; consume the click default now to avoid
+          // any other click-side effects (links, form controls) after the delay.
+          try { event.preventDefault(); } catch (e) {}
+
+          // Prefer system's TemplateManager if present (keeps existing UX behavior), else use Foundry preview
+          if (CONFIG?.ux?.TemplateManager && typeof CONFIG.ux.TemplateManager.createPreview === 'function') {
+            console.info('ECH: creating preview via CONFIG.ux.TemplateManager.createPreview', { data });
+            dlog('template', 'creating preview via TemplateManager', data);
+            CONFIG.ux.TemplateManager.createPreview(data);
+          } else if (game.canvas && game.canvas.templates && typeof game.canvas.templates._createPreview === 'function') {
+            console.info('ECH: creating preview via game.canvas.templates._createPreview', { data });
+            dlog('template', 'creating preview via Foundry _createPreview', data);
+            await game.canvas.templates._createPreview(data, { renderSheet: false });
+          } else {
+            console.info('ECH: no preview API available');
+            ui.notifications.warn(game.i18n.localize('enhancedcombathud-daggerheart.hud.tooltip.noScene'));
+          }
+        } catch (err) {
+          dlog('template', 'deferred createPreview failed', err);
+        }
+      }, 50);
     } catch (err) {
       console.warn('enhancedcombathud-daggerheart: measured-template click handler failed', err);
     }
